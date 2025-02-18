@@ -1,0 +1,374 @@
+'''
+- [Location] bin/busybox
+- [Type] Component
+- [Version Info] BusyBox 1.31.0 (CVE-2022-48174, CVE-2022-30065, CVE-2022-28391)
+- [Description] Multiple critical vulnerabilities detected, including stack overflow, use-after-free, and arbitrary code execution vulnerabilities. The binary lacks ASLR/PIE protection and has a writable GOT, making it exploitable for remote code execution as root.
+- [Details] Stack buffer overflow in the entry0 function, direct '/bin/sh' string without validation, and presence of sensitive paths (/etc/passwd, /etc/shadow).
+- [Impact] Full system compromise, denial of service, information leakage.
+- [Risk Level] Critical
+
+- [Location] bin/uclient-fetch
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential password exposure detected in the file.
+- [Details] The string 'password=<password>' was found, indicating potential hardcoded credentials.
+- [Impact] Unauthorized access to sensitive systems or data.
+- [Risk Level] High
+
+- [Location] bin/board_detect
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure file handling and command execution.
+- [Details] The script dynamically executes shell scripts from the `/etc/board.d/` directory without proper validation. The `CFG` variable is not validated, which could be manipulated to execute unintended commands.
+- [Impact] Arbitrary command execution if an attacker can place malicious scripts in the directory.
+- [Risk Level] High
+
+- [Location] bin/config_generate
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Hardcoded credentials detected in the script, including passwords and usernames used in network and PPPoE configurations.
+- [Details] Hardcoded password 'password' and username 'username' in network configuration: 'set network.$1.password='password'' and 'set network.$1.username='username''. Hardcoded credentials for PPPoE configuration: username='username' and password='password'.
+- [Impact] Exposure of sensitive credentials in critical network and authentication contexts.
+- [Risk Level] High
+'''
+'''
+- [Location] sbin/procd
+- [Type] Version Info
+- [Version Info] Potential version string 'r1gGa'
+- [Description] Potential embedded version string detected
+- [Details] The string 'r1gGa' was found, which may represent an embedded version identifier
+- [Impact] Version exposure can assist attackers in identifying vulnerable software versions
+- [Risk Level] Low
+
+- [Location] sbin/netifd
+- [Type] Vulnerability
+- [Version Info] Unknown
+- [Description] Critical security vulnerability in entry0 function
+- [Details] Disassembly analysis reveals: stack frame size of 0 (invalid for functions with local buffers), no stack canary protection, executable stack (NX-bit disabled), no position-independent code (PIC), presence of vulnerable 'gets' function, direct return address (RA) access
+- [Impact] High risk of buffer overflow and potential remote code execution, enabling shellcode execution and full control flow hijacking
+- [Risk Level] Critical
+
+- [Location] sbin/ubusd
+- [Type] Vulnerability
+- [Version Info] Unknown
+- [Description] Critical vulnerabilities identified
+- [Details] Register-controlled execution flow enabling ROP chain construction via stack buffer overflow and network handler. RWX memory segment allowing self-modifying code and runtime unpacking. No stack canary, ASLR, or W^X protections detected
+- [Impact] Potential for remote code execution and system compromise
+- [Risk Level] Critical
+
+- [Location] sbin/uci
+- [Type] Vulnerability
+- [Version Info] CVE-2017-17867
+- [Description] Critical vulnerability allowing remote authenticated users to execute arbitrary OS commands
+- [Details] Vulnerability affects odhcpd configuration in Inteno iopsys 2.0-3.14 and 4.0 devices. No direct evidence of leasetrigger field in strings, but vulnerability might be embedded in code logic
+- [Impact] Potential for remote code execution by authenticated attackers
+- [Risk Level] Critical
+'''
+'''
+- [Location] etc/profile
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Root password not set warning
+- [Details] The script checks if the root password is not set in /etc/shadow and displays a warning message
+- [Impact] Potential unauthorized access due to lack of basic security hardening
+- [Risk Level] High
+
+- [Location] etc/device_info
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Device information exposure
+- [Details] Contains device-specific information including manufacturer (OpenWrt), product (Generic), and revision (v0)
+- [Impact] Could be used for reconnaissance or targeted attacks against devices running OpenWrt
+- [Risk Level] Medium
+
+- [Location] etc/banner
+- [Type] Configuration
+- [Version Info] OpenWrt SNAPSHOT, r10956-62dbe361a1
+- [Description] Version information exposure
+- [Details] Contains version information: 'OpenWrt SNAPSHOT, r10956-62dbe361a1'
+- [Impact] Could be used by attackers to target known vulnerabilities specific to this version
+- [Risk Level] Medium
+
+- [Location] etc/services
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Exposure of multiple network services and ports
+- [Details] Contains a list of network services and their associated ports, including SSH (22/tcp), Telnet (23/tcp), and HTTPS (443/tcp)
+- [Impact] Increases the attack surface if not properly secured
+- [Risk Level] Medium
+
+- [Location] etc/shadow
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Password hash for root account is empty
+- [Details] The root account has an empty password hash (::), indicating no password is required for root access
+- [Impact] Allows unrestricted root access to the system
+- [Risk Level] Critical
+'''
+'''
+- [Location] lib/libc.so
+- [Type] Component
+- [Version Info] musl libc version 1.1.23, CVE-2019-14697
+- [Description] The file contains a version placeholder string and a hashed password/token. The version matches a known vulnerability in musl libc.
+- [Details] Version placeholder string 'Version %s' and hashed string '$1$abcd0123$9Qcg8DyviekV3tDGMZynJ1' found. CVE-2019-14697 involves an x87 floating-point stack adjustment imbalance.
+- [Impact] Potential sensitive credential exposure and out-of-bounds write vulnerability.
+- [Risk Level] High
+
+- [Location] lib/functions.sh
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] The script directly manipulates sensitive system files without proper input validation or sanitization, posing command injection and privilege escalation risks.
+- [Details] Functions like `user_add` and `group_add` modify /etc/passwd, /etc/shadow, and /etc/group without proper input validation. Shell commands with user-supplied inputs are used without escaping.
+- [Impact] Potential command injection and privilege escalation vulnerabilities.
+- [Risk Level] High
+
+- [Location] lib/libfstools.so
+- [Type] Component
+- [Version Info] Version 2.0, No known CVEs
+- [Description] Critical command injection vulnerabilities found in sym.jffs2_switch and sym.fopivot functions.
+- [Details] sym.jffs2_switch: Uncontrolled format string in system() call at 0x308c. sym.fopivot: Unvalidated user input flows to system() call at 0x4744.
+- [Impact] Full root command execution possible via command injection.
+- [Risk Level] Critical
+
+- [Location] lib/libvalidate.so
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential hardcoded sensitive strings related to wireless network security keys detected.
+- [Details] Strings 'wpakey' and 'wepkey' found, suggesting hardcoded WPA/WEP keys.
+- [Impact] Security vulnerabilities if keys are exposed or reused.
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/config/dropbear
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure SSH configuration detected
+- [Details] Password authentication enabled for both regular users and root ('PasswordAuth' and 'RootPasswordAuth' set to 'on'). SSH service running on default port 22.
+- [Impact] Increased risk of brute-force attacks and unauthorized access
+- [Risk Level] High
+
+- [Location] etc/config/dhcp
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Internal network configuration exposure
+- [Details] Contains internal network configurations including DNS settings, DHCP lease file paths, and interface bindings
+- [Impact] Potential exposure of network structure and attack vectors
+- [Risk Level] Medium
+'''
+'''
+- [Location] usr/bin/fwtool
+- [Type] Component
+- [Version Info] GLIBC_2.0 (CVE-2022-23218, CVE-2021-3999, CVE-2015-0235)
+- [Description] The file depends on an outdated version of the GNU C Library (GLIBC_2.0), which is affected by multiple CVEs, including buffer overflow, privilege escalation, and GHOST vulnerability.
+- [Details] The file handles firmware signing and metadata operations, which could expose sensitive data if not properly secured. The usage message indicates support for operations like appending/extracting metadata and signatures.
+- [Impact] Potential denial of service, arbitrary code execution, or privilege escalation if exploited.
+- [Risk Level] High
+
+- [Location] usr/bin/usign
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] The file contains references to key-related functionality, including private key, public key, and secret key handling, but no actual keys or credentials were exposed. The message 'Password protected secret keys are not supported' indicates a potential security limitation.
+- [Details] Specific commands and options are exposed, such as '-G' for generating a new keypair, '-F' for printing key fingerprints, and '-s' for specifying secret key files.
+- [Impact] Detailed configuration and functionality exposure could aid an attacker in understanding the system's cryptographic operations.
+- [Risk Level] Medium
+'''
+'''
+- [Location] usr/sbin/dnsmasq
+- [Type] Component
+- [Version Info] Version 2.80, CVEs: CVE-2020-25687, CVE-2020-25683, CVE-2020-25682, CVE-2020-25681, CVE-2020-25684, CVE-2020-25685, CVE-2020-25686, CVE-2017-14491, CVE-2017-14492, CVE-2017-14493
+- [Description] The file is identified as dnsmasq version 2.80, which is affected by multiple critical vulnerabilities, including heap-based buffer overflows, DNS cache poisoning, and remote code execution.
+- [Details] Version strings 'Dnsmasq version %s %s' and 'started, version %s' expose version information. Embedded IP address 127.0.0.0 found.
+- [Impact] Remote attackers could execute arbitrary code, cause denial of service, or perform DNS cache poisoning attacks.
+- [Risk Level] Critical
+
+- [Location] usr/sbin/dropbear
+- [Type] Component
+- [Version Info] CVEs: CVE-2023-48795, CVE-2017-9078
+- [Description] The file is a Dropbear SSH server executable with potential version exposure. Critical vulnerabilities include CVE-2023-48795 (Terrapin attack) and CVE-2017-9078 (post-authentication root RCE).
+- [Details] Version-related strings such as 'Dropbear SSH server v%s' and 'Dropbear v%s' are present, but no explicit version number is provided.
+- [Impact] Remote attackers could bypass integrity checks, downgrade security features, or execute arbitrary code with root privileges.
+- [Risk Level] High
+
+- [Location] usr/sbin/odhcpd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Disassembly reveals critical issues including invalid opcodes, unresolved code flow, and potential buffer overflow feasibility.
+- [Details] Invalid opcodes at 0x402108, unresolved code flow from entry0 to fcn.00402114, and evidence of potential buffer overflow.
+- [Impact] Possible exploitation vectors including bypassing anti-analysis and triggering invalid opcode exceptions.
+- [Risk Level] High
+
+- [Location] usr/sbin/wpad
+- [Type] Component
+- [Version Info] Version 2.7, CVEs: CVE-2019-9499, CVE-2019-9498, CVE-2019-9497, CVE-2019-9496, CVE-2019-9495, CVE-2019-9494
+- [Description] The file contains version strings 'hostapd v2.7' and 'wpa_supplicant v2.7', which are affected by multiple CVEs including authentication bypass, side-channel attacks, and denial of service.
+- [Details] SAE and EAP-PWD related configurations detected. Critical stack-based buffer overflow in function fcn.00418020.
+- [Impact] Remote code execution, authentication bypass, side-channel attacks, and denial of service.
+- [Risk Level] Critical
+
+- [Location] usr/sbin/iw
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Version-related strings such as 'iw version %s' and 'Version: %d' expose potential version information.
+- [Details] Version information exposure could aid attackers in identifying outdated or vulnerable versions.
+- [Impact] Potential exploitation if the version is outdated or vulnerable.
+- [Risk Level] Medium
+
+- [Location] usr/sbin/odhcp6c
+- [Type] Component
+- [Version Info] CVE-2021-22161
+- [Description] Routing loop vulnerability in odhcp6c when IPv6 is used, leading to excessive network traffic between the device and its upstream ISP's router.
+- [Details] Affects OpenWrt 19.07.x before 19.07.7. Issue occurs under specific conditions involving link prefix routes and router advertisements.
+- [Impact] Excessive network traffic and potential denial of service.
+- [Risk Level] Medium
+
+- [Location] usr/sbin/pppd
+- [Type] Component
+- [Version Info] Version 2.4.7
+- [Description] The file contains potential version strings (2.4.7) and sensitive content (password=, user=), along with insecure configurations like 'show-password'.
+- [Details] Sensitive content such as 'password=' and 'user=' could expose credentials. Insecure debug logging configuration 'show-password' enables display of passwords in debug logs.
+- [Impact] Credential exposure and potential unauthorized access.
+- [Risk Level] High
+
+- [Location] usr/sbin/xtables-legacy-multi
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Version-related strings including a command-line option '--version' expose version information.
+- [Details] Version information exposure could aid attackers in targeted exploitation if vulnerabilities exist.
+- [Impact] Potential exploitation if the version is outdated or vulnerable.
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/init.d/dnsmasq
+- [Type] Component
+- [Version Info] Multiple CVEs identified: CVE-2020-25687, CVE-2020-25682, CVE-2020-25681, CVE-2020-25684, CVE-2020-25685, CVE-2020-25686
+- [Description] Critical vulnerabilities in dnsmasq including heap-based buffer overflows and DNS cache poisoning
+- [Details] These vulnerabilities could allow remote code execution, denial of service, or data integrity issues
+- [Impact] Potential for remote attackers to execute arbitrary code, cause denial of service, or compromise data integrity
+- [Risk Level] Critical
+
+- [Location] etc/init.d/dropbear
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure default configuration for password authentication and root login
+- [Details] Password authentication (`PasswordAuth:bool:1`) and root password authentication (`RootPasswordAuth:bool:1`) are enabled by default. Host keys are generated without specifying key strength or enforcing strong cryptographic standards.
+- [Impact] Potential for brute-force attacks, unauthorized access, and weak key generation practices
+- [Risk Level] High
+
+- [Location] etc/init.d/sysfixtime
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure file permission handling in the 'maxtime' function
+- [Details] The 'maxtime' function uses 'find /etc -type f' to locate the newest file in the /etc directory and uses its modification time to set the system time. This could be manipulated by an attacker.
+- [Impact] Potential for time-based attacks or system misconfigurations
+- [Risk Level] Medium
+'''
+'''
+- [Location] usr/lib/libip4tc.so.2.0.0
+- [Type] Component
+- [Version Info] Version: libip4tc.so.2
+- [Description] Potential version mismatch or incorrect version handling detected in the library
+- [Details] The SONAME field in the dynamic section confirms the library version as 'libip4tc.so.2'. The output 'Module is wrong version' suggests there may be a version mismatch or incorrect version handling in the library.
+- [Impact] Compatibility issues or exploitation if not properly managed
+- [Risk Level] Medium
+
+- [Location] usr/lib/libip6tc.so.2.0.0
+- [Type] Component
+- [Version Info] Version: libip6tc.so.2
+- [Description] Potential version mismatch or version-related issue detected
+- [Details] The output 'Module is wrong version' suggests a version mismatch or compatibility issue.
+- [Impact] Instability or security vulnerabilities if the library is not functioning as intended
+- [Risk Level] Medium
+
+- [Location] usr/lib/libiptext4.so
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Potential version-related string found
+- [Details] The string 'get_kernel_version' suggests the file may interact with or expose kernel version information.
+- [Impact] Could be used for targeted attacks if exposed
+- [Risk Level] Medium
+
+- [Location] usr/lib/libjson-c.so.4.0.0
+- [Type] Component
+- [Version Info] Version: libjson-c.so.4 (exact sub-version unconfirmed)
+- [Description] Potential version exposure detected, but not confirmed
+- [Details] The 'SONAME' field in the dynamic section shows 'libjson-c.so.4'. Version-related strings like 'json_c_version' and 'json_c_version_num' were detected, but no explicit version number is provided.
+- [Impact] Could aid attackers in identifying vulnerabilities
+- [Risk Level] Medium
+
+- [Location] usr/lib/libxtables.so.12.2.0
+- [Type] Component
+- [Version Info] Version: libxtables.so.12 (exact sub-version unconfirmed)
+- [Description] Version-related strings found, but no exact version number identified
+- [Details] The 'SONAME' field in the dynamic section indicates the library is version 12 (libxtables.so.12), but the exact version (e.g., 12.2.0) is not explicitly confirmed. Critical security vulnerabilities identified in two functions: sym.xtables_numeric_to_ip6addr and fcn.000026a0.
+- [Impact] Potential version exposure and critical vulnerabilities leading to RCE and privilege escalation
+- [Risk Level] Critical
+'''
+'''
+- [Location] usr/lib/dnsmasq/dhcp-script.sh
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] The script sources an external file ($USER_DHCPSCRIPT) without validation, which could lead to arbitrary code execution if the environment variable is controlled by an attacker.
+- [Details] The script uses the command `. "$USER_DHCPSCRIPT" "$@"` to source an external script defined by the environment variable $USER_DHCPSCRIPT. If an attacker can control this variable, they could execute arbitrary commands with the privileges of the script.
+- [Impact] Potential arbitrary code execution with the privileges of the script.
+- [Risk Level] High
+'''
+'''
+- [Location] lib/network/config.sh
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure handling of network interface configuration and ubus calls
+- [Details] The script contains functions for network interface configuration, including dynamic interface naming and ubus calls. The 'ubus_call' function does not validate or sanitize its inputs, which could lead to injection attacks if the input is controlled by an attacker.
+- [Impact] Potential exploitation through injection attacks if an attacker gains control over configuration parameters
+- [Risk Level] Medium
+'''
+'''
+- [Location] lib/wifi/mac80211.sh
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure default wireless configuration detected
+- [Details] The script sets up a wireless access point with default SSID 'OpenWrt' and no encryption (encryption=none)
+- [Impact] Exposes the network to unauthorized access and potential attacks
+- [Risk Level] High
+'''
+'''
+- [Location] usr/lib/pppd/2.4.7/rp-pppoe.so
+- [Type] Version Info
+- [Version Info] RP-PPPoE plugin version (specific version not specified)
+- [Description] The file contains version-related strings that expose RP-PPPoE plugin version information
+- [Details] Contains string: 'RP-PPPoE plugin version %s compiled against pppd %s'
+- [Impact] Exposed version information could be used by attackers to identify potential vulnerabilities or outdated components
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/rc.button/failsafe
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure file handling vulnerability
+- [Details] The script writes the value of the environment variable ${BUTTON} to /tmp/failsafe_button without proper validation or sanitization
+- [Impact] Potential security issues if ${BUTTON} contains malicious content or if the file is accessed by unauthorized processes
+- [Risk Level] Medium
+
+- [Location] etc/rc.button/reset
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure command execution and lack of input validation
+- [Details] The script executes commands like `reboot` and `jffs2reset -y` without proper validation of the `SEEN` variable. It also writes directly to `/dev/console`
+- [Impact] Potential unintended system resets or factory resets, and possible exposure of sensitive information
+- [Risk Level] High
+
+- [Location] etc/rc.button/rfkill
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure configuration handling in wireless settings
+- [Details] The script modifies wireless configuration using 'uci set' and 'uci commit' without explicit validation or sanitization of input, and directly executes 'wifi up'
+- [Impact] Potential insecure configurations and exposure to risks if configuration changes are malicious or unintended
+- [Risk Level] Medium
+
+- [Location] etc/rc.button/wps
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Insecure handling of WPS credentials and potential command injection risk
+- [Details] The script processes WPS credentials using `ubus` calls without proper validation or sanitization. It dynamically constructs JSON payloads with user-supplied input (`ssid`, `key`, `encryption`)
+- [Impact] Potential command injection, JSON injection, credential interception, or manipulation
+- [Risk Level] High
+'''

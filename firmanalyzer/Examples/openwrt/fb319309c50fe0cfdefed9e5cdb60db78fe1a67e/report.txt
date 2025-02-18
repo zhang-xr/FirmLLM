@@ -1,0 +1,339 @@
+'''
+- [Location] bin/busybox
+- [Type] Component
+- [Version Info] v1.31.0, 1.31.0 (CVE-2022-48174, CVE-2022-30065, CVE-2022-28391)
+- [Description] Multiple critical vulnerabilities detected in BusyBox version 1.31.0, including stack overflow, use-after-free, and arbitrary code execution vulnerabilities.
+- [Details] Critical anti-analysis protections detected in function fcn.0042ebc0, including advanced code protection, runtime countermeasures, and unverified network input handling. The function exhibits advanced anti-analysis techniques such as control-flow flattening, junk instruction insertion, and dynamic code decryption. It also contains a recv() call with unverified network input handling.
+- [Impact] Remote attackers could execute arbitrary code, cause denial of service, or leak sensitive information.
+- [Risk Level] Critical
+
+- [Location] bin/opkg
+- [Type] Component
+- [Version Info] Unknown (Potential CVE-2020-7982)
+- [Description] Potential vulnerability CVE-2020-7982 identified, but version confirmation is required. The vulnerability allows a man-in-the-middle attacker to inject arbitrary package payloads due to incorrect parsing of embedded checksums in the signed repository index.
+- [Details] The exact version of the opkg binary in this file has not been confirmed, making it unclear if this binary is directly affected.
+- [Impact] Potential for arbitrary package payload injection by a man-in-the-middle attacker.
+- [Risk Level] High
+
+- [Location] bin/uclient-fetch
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential password exposure found in the file.
+- [Details] The string 'password=<password>' was detected, indicating potential credential exposure.
+- [Impact] Sensitive credentials could be exposed.
+- [Risk Level] High
+
+- [Location] bin/board_detect
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure file handling and script execution.
+- [Details] The script dynamically executes shell scripts from the /etc/board.d/ directory without proper validation. This could lead to arbitrary code execution if an attacker can place malicious scripts in that directory.
+- [Impact] Arbitrary code execution if malicious scripts are placed in the /etc/board.d/ directory.
+- [Risk Level] High
+
+- [Location] bin/config_generate
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Hardcoded password detected in the script.
+- [Details] The script contains a hardcoded password: password='password'. Additionally, the script contains a hardcoded password in the network configuration: `set network.$1.password='password'`.
+- [Impact] Sensitive credentials exposed in a network-related context, which could lead to unauthorized access.
+- [Risk Level] High
+'''
+'''
+- [Location] sbin/init
+- [Type] Component
+- [Version Info] Unknown (linked to libcrypto with potential CVEs: CVE-2024-45238, CVE-2021-3450, CVE-2019-1547)
+- [Description] Potential vulnerabilities in linked library libcrypto. The specific version of libcrypto could not be determined, preventing confirmation of whether the linked library is vulnerable to the identified CVEs.
+- [Details] CVE-2024-45238 involves improper handling of resource certificates, CVE-2021-3450 bypasses CA certificate validation, and CVE-2019-1547 exposes ECDSA keys to side-channel attacks.
+- [Impact] Potential security impact includes improper certificate handling, CA validation bypass, and side-channel attacks on ECDSA keys.
+- [Risk Level] High
+
+- [Location] sbin/logd
+- [Type] Other
+- [Version Info] Unknown
+- [Description] Potential anti-analysis techniques detected, including obfuscation or packing. The binary is stripped with no section headers, making static analysis difficult.
+- [Details] Disassembly analysis of the 'entry0' function at address 0x400dd0 returned an empty result. The binary is compiled for MIPS R3000 with MIPS32r2 extensions, using the o32 ABI.
+- [Impact] Increased risk of hidden vulnerabilities or malicious behavior due to inability to analyze critical functions.
+- [Risk Level] Medium
+
+- [Location] sbin/ubusd
+- [Type] Component
+- [Version Info] GLIBC_2.0 (affected by CVEs: CVE-2022-23218, CVE-2021-3999, CVE-2015-0235)
+- [Description] Potential version exposure and insecure configuration. The binary is linked to GLIBC 2.0, which has multiple critical vulnerabilities.
+- [Details] Insecure configurations include hardcoded paths (/var/run/ubus.sock, /dev/urandom, /usr/share/acl.d). CVEs include CVE-2022-23218 (buffer overflow), CVE-2021-3999 (privilege escalation), and CVE-2015-0235 (GHOST vulnerability).
+- [Impact] Potential remote code execution, privilege escalation, and denial of service.
+- [Risk Level] Critical
+
+- [Location] sbin/sysupgrade
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure handling of downloaded firmware image. The script downloads firmware images without proper validation of the source or integrity of the downloaded file.
+- [Details] The script uses 'wget' to download firmware images from HTTP/HTTPS URLs without enforcing HTTPS, verifying SSL certificates, or validating the integrity of the downloaded firmware image. The checksum validation step using SHA256 is incomplete.
+- [Impact] Potential for an attacker to supply a malicious firmware image if the download URL is compromised or spoofed.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/shadow
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Password hash exposure and weak password configuration
+- [Details] The root user has an empty password hash (::), indicating no password is set. Other accounts (daemon, ftp, network, nobody, dnsmasq) are locked (*)
+- [Impact] Unrestricted access to the root account
+- [Risk Level] Critical
+
+- [Location] etc/device_info
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Device information exposure
+- [Details] Contains device-specific information including manufacturer (OpenWrt), product (Generic), and revision (v0)
+- [Impact] Could help attackers identify device type and potentially exploit known vulnerabilities
+- [Risk Level] Medium
+
+- [Location] etc/profile
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Root password not set warning
+- [Details] Script checks if root password is not set in /etc/shadow and displays a warning message
+- [Impact] Indicates potential security risk if device is exposed to unauthorized access
+- [Risk Level] Medium
+
+- [Location] etc/services
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Exposure of multiple network services and ports
+- [Details] Lists numerous network services and associated ports, including potentially insecure services like telnet (23/tcp) and ftp (21/tcp)
+- [Impact] Could expose system to unnecessary risks if services are enabled and not properly secured
+- [Risk Level] Medium
+'''
+'''
+- [Location] lib/libc.so
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Hardcoded cryptographic hash found
+- [Details] The hash '$1$abcd0123$9Qcg8DyviekV3tDGMZynJ1' was found, which could be a hardcoded password or cryptographic material
+- [Impact] Potential authentication bypass or cryptographic compromise if the hash is used for security purposes
+- [Risk Level] High
+
+- [Location] lib/libgcc_s.so.1
+- [Type] Other
+- [Version Info] Unknown
+- [Description] Potential indirect data flow security issue
+- [Details] Disassembly analysis identified potential security issue at address 0x11394 (lbu a1, (s1)) with untracked data flow through register s1
+- [Impact] Possible hidden attack surfaces through unmonitored data channels
+- [Risk Level] Medium
+
+- [Location] lib/functions.sh
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure handling of user and group management functions
+- [Details] Functions like `user_add`, `group_add`, and `group_add_user` directly manipulate system files without proper input validation
+- [Impact] Potential privilege escalation or unauthorized user/group creation
+- [Risk Level] High
+
+- [Location] lib/libfstools.so
+- [Type] Other
+- [Version Info] Version 2.0 (No known CVEs)
+- [Description] Critical vulnerability in function fcn.00004b90
+- [Details] Contains direct command injection via unvalidated system() call, format string vulnerabilities, and memory corruption risks due to lack of stack protection mechanisms
+- [Impact] Arbitrary command execution, memory corruption, and denial-of-service risks
+- [Risk Level] Critical
+'''
+'''
+- [Location] usr/bin/usign
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] The file handles cryptographic keys and may have security weaknesses in key management
+- [Details] Strings analysis revealed references to 'private key', 'public key', and 'secret key file'. The output also mentions 'Password protected secret keys are not supported'
+- [Impact] Potential exposure of cryptographic keys and weak key management practices
+- [Risk Level] High
+'''
+'''
+- [Location] usr/sbin/dnsmasq
+- [Type] Version Info
+- [Version Info] Version strings present but exact version unknown. CVEs: CVE-2020-25684, CVE-2020-25683, CVE-2020-25682, CVE-2020-25681
+- [Description] Version strings detected but exact version not explicitly stated. Multiple critical CVEs affecting versions before 2.83, including DNS cache poisoning, heap-based buffer overflows, and memory leaks.
+- [Details] Version strings: 'Dnsmasq version %s %s', 'started, version %s'. Linked libraries: libubox.so, libubus.so, libgcc_s.so.1, libc.so.
+- [Impact] Potential remote code execution, DNS cache poisoning, and heap-based buffer overflows.
+- [Risk Level] Critical
+
+- [Location] usr/sbin/dropbear
+- [Type] Version Info
+- [Version Info] Conflicting version strings: 2.0-dropbear and 2019.78
+- [Description] Potential version exposure with conflicting version strings. URLs and emails embedded in the binary may indicate outdated or insecure configurations.
+- [Details] Version strings: 2.0-dropbear, 2019.78. URLs and emails present in the binary.
+- [Impact] Version exposure could aid attackers in targeting known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] usr/sbin/odhcp6c
+- [Type] Version Info
+- [Version Info] CVE-2021-22161 affecting OpenWrt 19.07.x before 19.07.7
+- [Description] Routing loop vulnerability in odhcp6c when IPv6 is used, leading to excessive network traffic and potential resource exhaustion.
+- [Details] CVE-2021-22161 describes a routing loop vulnerability under specific conditions involving link prefix routes and router advertisements.
+- [Impact] Network disruption and resource exhaustion.
+- [Risk Level] Medium
+
+- [Location] usr/sbin/wpad
+- [Type] Version Info
+- [Version Info] hostapd v2.7, wpa_supplicant v2.7. CVEs: CVE-2019-9499, CVE-2019-9498, CVE-2019-9497, CVE-2019-9496, CVE-2019-9495, CVE-2019-9494
+- [Description] Version strings 'hostapd v2.7' and 'wpa_supplicant v2.7' exposed. Multiple critical vulnerabilities identified, including authentication bypass, side-channel attacks, and denial of service.
+- [Details] Version strings: 'hostapd v2.7', 'wpa_supplicant v2.7'. No sensitive credentials or keys found.
+- [Impact] Authentication bypass, side-channel attacks, and denial of service.
+- [Risk Level] Critical
+
+- [Location] usr/sbin/fw_printenv
+- [Type] Configuration
+- [Version Info] Version-related strings present but exact version unknown
+- [Description] Version-related strings detected, indicating potential version exposure. Default configuration path '/etc/fw_env.config' exposed, with potential configuration file parsing issues.
+- [Details] Version strings: '-v, --version'. Configuration file path: '/etc/fw_env.config'. Error message: 'Cannot parse config file'.
+- [Impact] Version exposure and potential configuration file exploitation.
+- [Risk Level] Medium
+
+- [Location] usr/sbin/iw
+- [Type] Version Info
+- [Version Info] Version-related strings present but exact version unknown
+- [Description] Version-related strings detected but no explicit version number provided. Dynamic library dependencies and version-related tags detected.
+- [Details] Version strings: 'iw version %s', 'Version: %d'. Dynamic libraries: libnl-tiny.so, libgcc_s.so.1, libc.so.
+- [Impact] Potential version information exposure aiding attackers in identifying vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] usr/sbin/pppd
+- [Type] Credential/Configuration
+- [Version Info] pppd version 2.4.7
+- [Description] Version exposure confirmed as pppd 2.4.7. Password field and authentication-related strings detected, indicating potential credential exposure and insecure configuration practices.
+- [Details] Version strings: pppd 2.4.7. Password field, authentication-related strings (PAP, CHAP, MS-CHAP, EAP). Configuration files: /etc/ppp/pap-secrets, /etc/ppp/chap-secrets, /etc/ppp/srp-secrets.
+- [Impact] Potential credential exposure and unauthorized access.
+- [Risk Level] High
+
+- [Location] usr/sbin/xtables-legacy-multi
+- [Type] Version Info
+- [Version Info] Potential version 1.8.3
+- [Description] Potential version exposure detected with version strings '1.8.3'. Version-related strings present but exact version not explicitly stated.
+- [Details] Version strings: '1.8.3', '--version'.
+- [Impact] Version exposure could aid attackers in targeting known vulnerabilities.
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/config/dropbear
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure SSH configuration with password authentication enabled for both regular users and root
+- [Details] PasswordAuth 'on' and RootPasswordAuth 'on', SSH service exposed on default port 22
+- [Impact] Increased risk of brute force attacks and unauthorized access
+- [Risk Level] High
+
+- [Location] etc/config/firewall
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential exposure of sensitive network information in configuration comments
+- [Details] Contains IP addresses (192.168.45.2, 192.168.16.235, 194.25.2.129) and URLs (https://dev.openwrt.org/ticket/4108, https://dev.openwrt.org/ticket/10381) in comments
+- [Impact] Could aid attackers in reconnaissance and network mapping
+- [Risk Level] Medium
+
+- [Location] etc/config/dhcp
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential DNS rebind attack vulnerability and insecure configuration indicators
+- [Details] DNS rebind protection enabled but potentially bypassable, hardcoded DNS server IP (1.2.3.4) and bogus NXDomain IP (64.94.110.11) present but commented out, sensitive paths '/tmp/dhcp.leases' and '/tmp/resolv.conf.auto' exposed
+- [Impact] Potential for DNS rebind attacks and insecure DNS configurations
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/init.d/dnsmasq
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Hardcoded IP addresses in DHCP and DNS configurations
+- [Details] The script contains hardcoded IP addresses (192.168.0.199, 127.0.0.1, 127.0.0.0/8) in DHCP and DNS configurations. Additionally, the DHCP configurations include static mappings for specific MAC addresses (e.g., 00:20:e0:3b:13:af) to fixed IPs.
+- [Impact] Potential misconfigurations or security issues if the network environment changes. The use of 127.0.0.0/8 for DNS responses could allow localhost traffic to bypass security controls.
+- [Risk Level] Medium
+'''
+'''
+- [Location] lib/wifi/mac80211.sh
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure default wireless network configuration with open authentication
+- [Details] The script configures a wireless network with default SSID 'OpenWrt' and no encryption (encryption=none)
+- [Impact] Potential unauthorized access to wireless network if default configuration is not changed
+- [Risk Level] High
+'''
+'''
+- [Location] lib/modules/4.19.69/ip_tables.ko
+- [Type] Component
+- [Version Info] 4.19.69, CVE-2019-15902
+- [Description] The file contains a known vulnerability (CVE-2019-15902) affecting the Linux kernel version 4.19.69, reintroducing the Spectre vulnerability due to a backporting error in the ptrace_get_debugreg() function. Additionally, critical vulnerabilities were identified in multiple functions, including uncontrolled buffer copy and unsecured memcpy operations.
+- [Details] 1) In 'sym.ipt_alloc_initial_table', an uncontrolled buffer copy via memcpy with user-controlled size, exploitable via network packets. 2) In 'sym.init_module', unsecured memcpy operations with direct user input propagation, exploitable via ioctl_handler. 3) In 'fcn.080018f0', untrusted input reaches memcpy with missing security mitigations.
+- [Impact] Potential remote code execution and privilege escalation risks.
+- [Risk Level] Critical
+
+- [Location] lib/modules/4.19.69/ip6_tables.ko
+- [Type] Component
+- [Version Info] 4.19.69, CVE-2011-1172, CVE-2006-4572
+- [Description] The file contains potential version strings '4.19.69', exposing the kernel version. Two CVEs affecting the detected version were identified: CVE-2011-1172 (information disclosure) and CVE-2006-4572 (rule bypass in ip6_tables). Critical control flow flaws and protection bypass vectors were identified in key functions.
+- [Details] 1) Unprotected code paths to __copy_user operations (CVE-2011-1172 pattern). 2) Stack cookie verification bypass and unchecked error propagation. 3) Writable kernel target address and fixed-size buffer with variable-length source (CVE-2006-4572 pattern). 4) Multiple protection mechanism failures including missing stack canary and size validation.
+- [Impact] Potential information disclosure, rule bypass, and remote code execution.
+- [Risk Level] High
+
+- [Location] lib/modules/4.19.69/nf_conntrack.ko
+- [Type] Component
+- [Version Info] 4.19.69, CVE-2014-9715, CVE-2007-1497
+- [Description] Two CVEs identified affecting the nf_conntrack module: CVE-2014-9715 (NULL pointer dereference) and CVE-2007-1497 (rule bypass using IPv6 fragments). The detected version (4.19.69) is newer than the affected versions, but these CVEs highlight historical vulnerabilities.
+- [Details] CVE-2014-9715 causes a NULL pointer dereference and OOPS via outbound network traffic. CVE-2007-1497 allows remote attackers to bypass rulesets using IPv6 fragments.
+- [Impact] Potential denial of service and rule bypass.
+- [Risk Level] Medium
+
+- [Location] lib/modules/4.19.69/nf_nat.ko
+- [Type] Component
+- [Version Info] 4.19.69
+- [Description] Multiple critical vulnerabilities detected, including unprotected execution flow, uncontrolled memory operations, stack corruption risks, and missing stack protections.
+- [Details] 1) Unprotected execution flow in 'sym.init_module' with direct path to unvalidated memcpy. 2) Uncontrolled memory operations and null pointer dereference risks in 'fcn.08000d6c'. 3) Stack buffer overflow and lack of input validation in 'fcn.08001aac'. 4) Missing stack protections and user-controlled memcpy parameters in 'sym.nf_nat_register_fn'.
+- [Impact] Potential kernel-level code execution, arbitrary read/write, and system compromise.
+- [Risk Level] Critical
+
+- [Location] lib/modules/4.19.69/mac80211.ko
+- [Type] Component
+- [Version Info] 4.19.69, 0.780, CVE-2014-8709, CVE-2014-2706
+- [Description] Potential version strings detected (5.3-rc4-1, 4.19.69, 0.780). Default configurations and settings, including default keys and WMM parameters, could lead to security issues. Two CVEs identified (CVE-2014-8709 and CVE-2014-2706) affecting the mac80211 module.
+- [Details] CVE-2014-8709 allows remote attackers to obtain sensitive cleartext information. CVE-2014-2706 involves a race condition causing denial of service. Both affect versions before 3.13.7.
+- [Impact] Potential weak encryption, misconfigured network parameters, sensitive information disclosure, and denial of service.
+- [Risk Level] High
+
+- [Location] lib/modules/4.19.69/cfg80211.ko
+- [Type] Component
+- [Version Info] 4.19.69, CVE-2017-7541, CVE-2016-8658
+- [Description] Two CVEs affecting the cfg80211 kernel module were identified: CVE-2017-7541 (buffer overflow via crafted Netlink packet) and CVE-2016-8658 (stack-based buffer overflow via long SSID Information Element).
+- [Details] CVE-2017-7541 allows local users to cause a buffer overflow and system crash or gain privileges. CVE-2016-8658 involves a stack-based buffer overflow that could lead to system crashes or other impacts.
+- [Impact] Potential denial of service or privilege escalation.
+- [Risk Level] High
+
+- [Location] lib/modules/4.19.69/usbcore.ko
+- [Type] Component
+- [Version Info] 4.19.69, CVE-2019-15902
+- [Description] Version information exposure confirms the kernel module is built for Linux kernel version 4.19.69. The vulnerability CVE-2019-15902 affects this version, reintroducing the Spectre vulnerability.
+- [Details] CVE-2019-15902 involves a backporting error that reintroduced the Spectre vulnerability in the ptrace_get_debugreg() function.
+- [Impact] Potential exploitation of speculative execution side-channel attacks.
+- [Risk Level] Medium
+
+- [Location] lib/modules/4.19.69/ppp_generic.ko
+- [Type] Component
+- [Version Info] 4.19.69, CVE-2019-15902
+- [Description] Version information 'PPP generic driver version 2.4.2' and 'vermagic=4.19.69' is exposed. The kernel version 4.19.69 is vulnerable to CVE-2019-15902, reintroducing the Spectre vulnerability.
+- [Details] CVE-2019-15902 reintroduces the Spectre vulnerability due to a backporting error.
+- [Impact] Potential exploitation of speculative execution side-channel attacks.
+- [Risk Level] Medium
+
+- [Location] lib/modules/4.19.69/nf_flow_table.ko
+- [Type] Component
+- [Version Info] 4.19.69, CVE-2022-48976
+- [Description] The vulnerability CVE-2022-48976 affects the Linux kernel's netfilter flowtable_offload module, specifically in the flow_offload_queue_work() function.
+- [Details] The issue arises from using __this_cpu_add in a preemptible context, which can lead to a kernel panic or instability.
+- [Impact] Potential kernel panic or system instability.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/uci-defaults/10_migrate-shadow
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] The script directly manipulates sensitive system files (/etc/passwd and /etc/shadow) to migrate the root password hash.
+- [Details] The script uses `sed` to modify /etc/passwd and /etc/shadow, which are critical system files containing user account information and password hashes.
+- [Impact] Unauthorized access to these files could lead to privilege escalation or credential theft. If the script is executed with improper permissions or in an insecure environment, it could lead to unauthorized access to the root account.
+- [Risk Level] High
+'''
