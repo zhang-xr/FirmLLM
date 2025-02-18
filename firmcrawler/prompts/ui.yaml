@@ -1,0 +1,111 @@
+inspector:
+  user: |
+    Workflow Examples:
+    {{
+        "thought": "Found direct firmware download links (.bin files) with version numbers",
+        "action": "ANSWER SCRAPER",
+        "status": "complete",
+        "next_step": "Direct download links found, suitable for Scraper"
+    }}
+    {{
+        "thought": "Page shows product list with 'Download' section for each, but needs additional navigation",
+        "action": "ANSWER EXPLORER",
+        "status": "complete",
+        "next_step": "Multiple products with download sections need exploration"
+    }}
+    {{
+        "thought": "Page contains both product info and firmware download section",
+        "action": "ANSWER ALL",
+        "status": "complete",
+        "next_step": "Mixed content needs both Scraper and Explorer"
+    }}
+    {{
+        "thought": "Found firmware table with version info but download links need verification",
+        "action": "ANSWER ALL",
+        "status": "complete",
+        "next_step": "Firmware info present but needs further processing"
+    }}
+    {{
+        "thought": "Page shows product specs with firmware update button",
+        "action": "ANSWER ALL",
+        "status": "complete",
+        "next_step": "Contains both product info and firmware update option"
+    }}
+    {{
+        "thought": "Download section visible but links go to selection page",
+        "action": "ANSWER EXPLORER",
+        "status": "complete",
+        "next_step": "Downloads require further navigation"
+    }}
+explorer:
+  user: |
+    Workflow Examples:
+    {{
+        "thought": "Start scrolling down to load all content",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Check for initial viewport links after scrolling"
+    }}
+    {{
+        "thought": "Starting from page top, collect initial viewport links",
+        "action": "GET_NAVIGATION_LINKS 1,2,3,4,5",
+        "status": "continue",
+        "next_step": "After collecting links, scroll for more content"
+    }}
+    {{
+        "thought": "Current viewport processed, scroll down to see more content",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Wait for new content to load"
+    }}
+    {{
+        "thought": "Process next group of links in new viewport",
+        "action": "GET_NAVIGATION_LINKS 6,7,8,9,10",
+        "status": "continue",
+        "next_step": "Check for more content by scrolling"
+    }}
+    {{
+        "thought": "Scroll to check for more content",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Wait to verify if new content appears"
+    }}
+    {{
+        "thought": "Perform final scroll to confirm bottom reached",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Verify all content processed"
+    }}
+    {{
+        "thought": "Verification complete: reached bottom, no new content, all links collected",
+        "action": "ANSWER Task completed",
+        "status": "complete",
+        "next_step": "Task finished, all links collected"
+    }}
+
+scraper:
+  user: |
+    Note that you start from the top of the page, so no need to scroll up. Make sure to reach the bottom before submitting ANSWER.
+    Begin scrolling down to load all content. Process each viewport systematically.
+
+    Example workflow:
+    {{
+        "thought": "Starting from page top, scanning for firmware download sections",
+        "action": "GET_NAVIGATION_LINKS 1,2,3",
+        "status": "continue",
+        "next_step": "After collecting current info, scroll down for more content"
+    }}
+
+    {{
+        "thought": "Firmware info from current viewport collected, continuing down",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Process newly visible firmware info"
+    }}
+
+    {{
+        "thought": "Reached page bottom, all firmware info collected",
+        "action": "ANSWER {collected_firmware_info}",
+        "status": "complete",
+        "next_step": "Task complete, all firmware info gathered"
+    }}

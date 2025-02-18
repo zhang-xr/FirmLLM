@@ -1,0 +1,151 @@
+inspector:
+  user: |
+    Workflow Examples:
+    {{
+        "thought": "Found direct firmware download links (.bin files) with version numbers",
+        "action": "ANSWER SCRAPER",
+        "status": "complete",
+        "next_step": "Direct download links found, suitable for Scraper"
+    }}
+    {{
+        "thought": "Page shows product list with 'Download' section for each, but needs additional navigation",
+        "action": "ANSWER EXPLORER",
+        "status": "complete",
+        "next_step": "Multiple products with download sections need exploration"
+    }}
+    {{
+        "thought": "Page contains both product info and firmware download section",
+        "action": "ANSWER ALL",
+        "status": "complete",
+        "next_step": "Mixed content needs both Scraper and Explorer"
+    }}
+    {{
+        "thought": "Found firmware table with version info but download links need verification",
+        "action": "ANSWER ALL",
+        "status": "complete",
+        "next_step": "Firmware info present but needs further processing"
+    }}
+    {{
+        "thought": "Page shows product specs with firmware update button",
+        "action": "ANSWER ALL",
+        "status": "complete",
+        "next_step": "Contains both product info and firmware update option"
+    }}
+    {{
+        "thought": "Download section visible but links go to selection page",
+        "action": "ANSWER EXPLORER",
+        "status": "complete",
+        "next_step": "Downloads require further navigation"
+    }}
+
+explorer:
+  user: |
+    Important Task Requirements:
+    - Must scroll to top of page when entering any new page
+    - Must process all product images and their corresponding navigation links
+    - Must scroll to the absolute bottom of each page
+    - Must perform multiple scroll verifications to confirm true bottom is reached
+    - Must ONLY click "Next Page" button (NEVER click "Previous Page")
+    - Must process pages in forward order only (from first page to last page)
+    - Must process content from top to bottom on each page
+    - Only complete task after confirming no more content and no next page exists
+    
+    Workflow Examples:
+    {{
+        "thought": "Start by ensuring we're at the top of the page",
+        "action": "SCROLL WINDOW; up",
+        "status": "continue",
+        "next_step": "Begin processing from page top"
+    }}
+    {{
+        "thought": "Start scrolling down to load initial content",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Wait for content to load then collect first set of product links"
+    }}
+    {{
+        "thought": "Processing first group of product images and their navigation links",
+        "action": "GET_NAVIGATION_LINKS 1,2,3,4,5",
+        "status": "continue",
+        "next_step": "Scroll down to check for more products"
+    }}
+    {{
+        "thought": "More products visible, scroll to load them completely",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Process next group of product links"
+    }}
+    {{
+        "thought": "Getting next set of product navigation links",
+        "action": "GET_NAVIGATION_LINKS 6,7,8,9,10",
+        "status": "continue",
+        "next_step": "Continue scrolling to check for more content"
+    }}
+    {{
+        "thought": "Scroll to check for more content and next page button",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Verify if next page exists"
+    }}
+    {{
+        "thought": "Found next page button (element 11), verifying it's 'Next' not 'Previous'",
+        "action": "VERIFY_TEXT 11 'next'",
+        "status": "continue",
+        "next_step": "Click next page if verified"
+    }}
+    {{
+        "thought": "Confirmed it's next page button, clicking to proceed",
+        "action": "CLICK 11",
+        "status": "continue",
+        "next_step": "Wait for new page to load then scroll to top"
+    }}
+    {{
+        "thought": "New page loaded, scrolling back to top before processing",
+        "action": "SCROLL WINDOW; up",
+        "status": "continue",
+        "next_step": "Begin processing new page from top"
+    }}
+    {{
+        "thought": "No next page found, performing additional scroll to verify bottom",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Double check we reached true bottom"
+    }}
+    {{
+        "thought": "Performing final verification scroll",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Confirm no more content or next page button"
+    }}
+    {{
+        "thought": "Multiple scrolls confirm true bottom reached, no next page found",
+        "action": "ANSWER All pages processed successfully, confirmed no more content",
+        "status": "complete",
+        "next_step": "Task complete, collected all product links from all pages"
+    }}
+scraper:
+  user: |
+    Note that you start from the top of the page, so no need to scroll up. Make sure to reach the bottom before submitting ANSWER.
+    Begin scrolling down to load all content. Process each viewport systematically.
+
+    Example workflow:
+    {{
+        "thought": "Starting from page top, scanning for firmware download sections",
+        "action": "GET_NAVIGATION_LINKS 1,2,3",
+        "status": "continue",
+        "next_step": "After collecting current info, scroll down for more content"
+    }}
+
+    {{
+        "thought": "Firmware info from current viewport collected, continuing down",
+        "action": "SCROLL WINDOW; down",
+        "status": "continue",
+        "next_step": "Process newly visible firmware info"
+    }}
+
+    {{
+        "thought": "Reached page bottom, all firmware info collected",
+        "action": "ANSWER {collected_firmware_info}",
+        "status": "complete",
+        "next_step": "Task complete, all firmware info gathered"
+    }}

@@ -1,0 +1,266 @@
+'''
+- [Location] bin/busybox
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical and high-severity CVEs affecting BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution vulnerabilities. Unsafe function usage (gets, fgets, strcpy) identified in multiple functions.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2022-28391, CVE-2021-42386, CVE-2021-42385, CVE-2021-42384, CVE-2021-42383, CVE-2021-42382, CVE-2021-28831, CVE-2019-5747, CVE-2018-20679, CVE-2017-16544, CVE-2017-15874, CVE-2017-15873, CVE-2016-6301, CVE-2016-2148, CVE-2016-2147, CVE-2015-9261, CVE-2014-9645, CVE-2013-1813, CVE-2011-5325, CVE-2011-2716, CVE-2006-5050, CVE-2006-1058. Unsafe functions: gets, fgets, strcpy.
+- [Impact] Remote code execution, privilege escalation, denial of service.
+- [Risk Level] Critical
+
+- [Location] bin/ip
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution. Unsafe 'gets' usage identified in multiple functions.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2022-28391. Unsafe functions: gets.
+- [Impact] Remote code execution, system crashes.
+- [Risk Level] Critical
+
+- [Location] bin/iplink
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution. Unsafe functions (gets, fgets, strcpy) identified.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2022-28391. Unsafe functions: gets, fgets, strcpy, strchr.
+- [Impact] Arbitrary code execution, denial of service, information leakage.
+- [Risk Level] Critical
+
+- [Location] bin/iproute
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2022-28391.
+- [Impact] Remote code execution, denial of service.
+- [Risk Level] Critical
+
+- [Location] bin/ping
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2022-28391.
+- [Impact] Remote code execution, denial of service.
+- [Risk Level] Critical
+
+- [Location] bin/ping6
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution. Unsafe 'gets' usage identified.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2021-42386. Unsafe functions: gets.
+- [Impact] Remote code execution, denial of service.
+- [Risk Level] Critical
+
+- [Location] bin/sh
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution. Unsafe functions (gets, strcpy, fgets) identified.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2021-42386. Unsafe functions: gets, strcpy, fgets.
+- [Impact] Remote code execution, denial of service.
+- [Risk Level] Critical
+
+- [Location] bin/ps
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution. Unsafe 'gets' usage identified.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2022-28391. Unsafe functions: gets.
+- [Impact] Remote code execution, denial of service.
+- [Risk Level] Critical
+
+- [Location] bin/mount
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution. Unsafe functions (gets, fgets) identified.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2021-42386. Unsafe functions: gets, fgets.
+- [Impact] Remote code execution, denial of service.
+- [Risk Level] Critical
+
+- [Location] bin/umount
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] Multiple critical vulnerabilities in BusyBox v1.14.1, including stack overflow, use-after-free, and arbitrary code execution.
+- [Details] CVEs: CVE-2022-48174, CVE-2022-30065, CVE-2022-28391.
+- [Impact] Remote code execution, denial of service.
+- [Risk Level] Critical
+'''
+'''
+- [Location] sbin/init
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2018-20679 (information leakage).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `getsockname`, `gets`, `fgets`, `sscanf`) without proper input validation, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential remote code execution, denial of service, and information leakage.
+- [Risk Level] Critical
+
+- [Location] sbin/hostapd
+- [Type] Component
+- [Version Info] hostapd v0.8.x, v2.0, 0.9.8, 239.0.0, 255.0.0, 4.3.3
+- [Description] The file contains outdated versions of hostapd, which are vulnerable to multiple CVEs, including CVE-2022-23304 (side-channel attacks), CVE-2019-9499 (authentication bypass), and CVE-2016-4476 (denial of service).
+- [Details] The file handles wireless authentication and encryption, making it a high-risk target for exploitation.
+- [Impact] Potential side-channel attacks, authentication bypass, and denial of service.
+- [Risk Level] High
+
+- [Location] sbin/httpd
+- [Type] Component
+- [Version Info] httpd 1.3.6, 1.4.1, 5.7.2
+- [Description] The file contains outdated versions of httpd, which are vulnerable to multiple CVEs, including CVE-2007-3304 (buffer overflow), CVE-2007-3847 (cross-site scripting), and CVE-2007-5000 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `strcpy`, `memcpy`) without bounds checking, leading to buffer overflow and remote code execution risks.
+- [Impact] Potential remote code execution, denial of service, and sensitive information exposure.
+- [Risk Level] Critical
+
+- [Location] sbin/wpa_supplicant
+- [Type] Component
+- [Version Info] wpa_supplicant 3.3.2, 4.3.3, 9.2.0
+- [Description] The file contains outdated versions of wpa_supplicant, which are vulnerable to multiple CVEs, including CVE-2023-52160 (authentication bypass), CVE-2022-23304 (side-channel attacks), and CVE-2021-27803 (denial of service).
+- [Details] The file handles wireless network authentication, making it a high-risk target for exploitation.
+- [Impact] Potential authentication bypass, side-channel attacks, and denial of service.
+- [Risk Level] High
+
+- [Location] sbin/ifconfig
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `strcpy`, `fgets`) without proper input validation, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential remote code execution, denial of service, and information leakage.
+- [Risk Level] Critical
+
+- [Location] sbin/insmod
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2021-42373 (command injection), CVE-2021-42374 (buffer overflow), and CVE-2018-7170 (buffer overflow).
+- [Details] The file handles kernel module loading, making it a high-risk target for exploitation.
+- [Impact] Potential command injection, buffer overflow, and arbitrary code execution.
+- [Risk Level] Critical
+
+- [Location] sbin/iwconfig
+- [Type] Component
+- [Version Info] iwconfig 4.3.3
+- [Description] The file contains outdated versions of iwconfig, which could be vulnerable to known CVEs.
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `fgets`, `memcpy`, `strncpy`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential remote code execution and memory corruption.
+- [Risk Level] High
+
+- [Location] sbin/iwlist
+- [Type] Component
+- [Version Info] iwlist 4.3.3, 3.3.2, 2.4, 2.0, 802.11
+- [Description] The file contains outdated versions of iwlist, which could be vulnerable to known CVEs.
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `strncpy`, `strcpy`, `sprintf`) without proper bounds checking, leading to buffer overflow and format string vulnerabilities.
+- [Impact] Potential buffer overflow, format string vulnerabilities, and memory corruption.
+- [Risk Level] High
+
+- [Location] sbin/iwpriv
+- [Type] Component
+- [Version Info] iwpriv 4.3.3, 3.3.2, LIBC_2.0
+- [Description] The file contains outdated versions of iwpriv, which could be vulnerable to known CVEs.
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `strcpy`, `fprintf`, `sscanf`) without proper input validation, leading to buffer overflow and format string vulnerabilities.
+- [Impact] Potential remote code execution and sensitive data exposure.
+- [Risk Level] High
+
+- [Location] sbin/klogd
+- [Type] Component
+- [Version Info] klogd 1.3.6, 1.4.1, 5.7.2
+- [Description] The file contains outdated versions of klogd, which are vulnerable to CVE-2001-0738 (denial of service).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `strcpy`, `sprintf`, `system`) without proper input validation, leading to buffer overflow and command injection risks.
+- [Impact] Potential denial of service, command injection, and arbitrary code execution.
+- [Risk Level] High
+
+- [Location] sbin/lsmod
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `fgets`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential remote code execution, privilege escalation, and system compromise.
+- [Risk Level] Critical
+
+- [Location] sbin/mdev
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `fgets`) without proper input validation, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential arbitrary code execution, privilege escalation, and system compromise.
+- [Risk Level] Critical
+
+- [Location] sbin/modprobe
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `strcpy`, `memcpy`, `sprintf`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential arbitrary code execution, memory corruption, and control flow integrity issues.
+- [Risk Level] Critical
+
+- [Location] sbin/rmmod
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `fgets`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential denial of service, code execution, and information leakage.
+- [Risk Level] Critical
+
+- [Location] sbin/route
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `fgets`, `strcpy`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential arbitrary code execution, denial of service, and system compromise.
+- [Risk Level] Critical
+
+- [Location] sbin/sysctl
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `fgets`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential arbitrary code execution, denial of service, and information leakage.
+- [Risk Level] Critical
+
+- [Location] sbin/syslogd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] The file contains multiple high-risk and critical vulnerabilities, including buffer overflows, command injection, and format string vulnerabilities.
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `sprintf`, `popen`, `strcpy`) without proper input validation, leading to buffer overflow and command injection risks.
+- [Impact] Potential remote code execution and privilege escalation.
+- [Risk Level] Critical
+
+- [Location] sbin/tunctl
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `strcpy`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential arbitrary code execution, system crashes, and information disclosure.
+- [Risk Level] Critical
+
+- [Location] sbin/vconfig
+- [Type] Component
+- [Version Info] BusyBox v1.14.1, sed version 4.0
+- [Description] The file contains BusyBox v1.14.1 and sed version 4.0, which are affected by multiple critical CVEs, including CVE-2022-48174 (stack overflow), CVE-2022-30065 (use-after-free), and CVE-2022-28391 (remote code execution).
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `gets`, `strcpy`, `fgets`) without proper bounds checking, leading to buffer overflow and memory corruption risks.
+- [Impact] Potential remote code execution, privilege escalation, and network configuration manipulation.
+- [Risk Level] Critical
+
+- [Location] sbin/wlanconfig
+- [Type] Component
+- [Version Info] wlanconfig 3.3.2, 4.3.3
+- [Description] The file contains outdated versions of wlanconfig, which could be vulnerable to known CVEs.
+- [Details] The file handles wireless network configuration, making it a high-risk target for exploitation.
+- [Impact] Potential vulnerabilities in wireless network configuration.
+- [Risk Level] Medium
+
+- [Location] sbin/ebtables
+- [Type] Component
+- [Version Info] ebtables 3.3.2, 4.3.3, 2.0
+- [Description] The file contains outdated versions of ebtables, which could be vulnerable to known CVEs.
+- [Details] The file handles network filtering, making it a high-risk target for exploitation.
+- [Impact] Potential vulnerabilities in network filtering.
+- [Risk Level] Medium
+
+- [Location] sbin/ebtables-restore
+- [Type] Component
+- [Version Info] Unknown
+- [Description] The file contains potential format string vulnerabilities and critical use of `gets` without bounds checking.
+- [Details] Disassembly analysis reveals unsafe function usage (e.g., `fprintf`, `gets`) without proper input validation, leading to buffer overflow and format string vulnerabilities.
+- [Impact] Potential remote code execution and privilege escalation.
+- [Risk Level] Critical
+
+- [Location] sbin/ebtables-save
+- [Type] Component
+- [Version Info] Unknown
+- [Description] The file contains hardcoded paths and potential command injection vulnerabilities due to insecure use of environment variables.
+- [Details] The script uses backticks to execute shell commands without proper sanitization, leading to potential command injection risks.
+- [Impact] Potential command injection and inconsistent behavior due to insecure environment variable usage.
+- [Risk Level] High
+'''

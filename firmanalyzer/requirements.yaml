@@ -1,0 +1,147 @@
+file_requirements:
+  user: |
+       - Core System Components
+         * Basic Tools
+           - System command sets
+           - Runtime utilities
+           - System management tools
+           
+         * System Libraries
+           - Core libraries
+           - Shared libraries
+           - Dynamic linkers
+
+       - Service Components
+         * Network Services
+           - Remote access
+           - Network utilities
+           - Protocol handlers
+           
+         * System Services
+           - Daemon processes
+           - Background services
+           - Service managers
+           
+         * Web Services
+           - Web servers
+           - Web applications
+           - Web utilities
+
+       - Configuration Files
+         * Web Components
+           - CGI scripts 
+           - Server configurations 
+           - Web root files 
+           
+         * Security Files
+           - Private keys 
+           - Certificates 
+           - Password stores 
+           
+         * System Configs
+           - Boot scripts
+           - Network configs
+           - Service configs
+
+directory_requirements:
+  user: |
+    **Requirements for Key Analysis Areas**:
+    1. Executable Locations
+       * System Binaries
+       * Library Paths
+       * Special Executables
+
+    2. Sensitive Files Locations
+       * System Configuration
+       * Security Data
+       * Credentials
+   
+    3. Service configuration
+       * Web Services 
+       * Service Data
+       * Service Configuration
+       
+    **Requirements for Analysis Priority**:
+    1. Priority 1 (Critical)
+      - bin/
+      - sbin/
+      - usr/bin/
+      - usr/sbin/
+      - cgi-bin/
+    2. Priority 2 (High)
+      - etc/
+      - lib/
+      - www/
+    3. Priority 3 (Medium)
+      - web/
+      - usr/
+      - upgrade/     
+
+file_findings_requirements:
+  user: |
+    **Analysis Workflow**
+    1. Information Discovery
+       - Credential Scanning
+       - Network Endpoint Detection
+       - Certificate/Key Analysis 
+       - Version/Outdated Version
+       - Pattern Matching (IP addresses, URLs, passwords, API, token, etc)
+
+    2. Security Review
+       - Access Control Verification
+       - Encryption Assessment
+       - Service Exposure Check
+       - Default Configuration Audit
+
+    3. Code Analysis
+       - Function Call Review
+       - Injection Testing
+       - Control Flow Analysis
+       - Input Validation Check
+
+    4. Vulnerability Search
+       - List all CVEs directly affecting current component versions (ensure completeness)
+       - Exclude matches without direct evidence
+
+    **Severity Rating Criteria**
+
+    Level 5 (Critical): Remote Code Execution, Private Key Exposure, Root Credential Exposure, Command Injection, Encryption Bypass
+
+    Level 4 (High):  Password/API Key Exposure, Sensitive Config Exposure, Dangerous Function Usage, Privilege Escalation, Sensitive Data Unencrypted
+
+    Level 3 (Medium): Version Info Exposure, Weak Security Policy, Insecure Configuration, Known Vulnerabilities, Sensitive Information Exposure,etc
+
+    Level 0-2 (Low): Debug Info Exposure, Sensitive Comments, Unnecessary Services, Minor Configuration Errors,etc
+
+security_report_template:
+  user: |
+    - [Location] Relative path
+    - [Type] Component/Credential/Configuration/Other
+    - [Version Info] Version/release information and CVE number if applicable
+    - [Description] Detailed issue description
+    - [Details] Technical details/Sensitive information
+    - [Impact] Potential security impact
+    - [Risk Level] Critical/High/Medium/Low
+
+summary_template:
+  user: |
+    Firmware Summary:
+    [Basic Info]
+    - Name/Version: [Firmware name and version]
+    - Device/Type/Arch: [Device model and architecture]
+    - Key Info: [Other important information, such as release date, kernel version, etc.]
+
+    [Coverage] 
+    - Key Dirs: [Key directories analyzed]
+    - Key Files: [Key files analyzed]
+
+    [Main Issues]
+    - Critical Issues: [Location]: Root cause of the issue (Specific technical details like vulnerable code/misconfiguration/insecure functions etc.)
+    - Major Issues: [Location]: Root cause of the issue (Specific technical details like vulnerable code/misconfiguration/insecure functions etc.)
+    - Other Issues: [Location]: Root cause of the issue (Specific technical details like vulnerable code/misconfiguration/insecure functions etc.)
+
+    [Attack Surface]
+    - Attack Points: [Description of attack points]
+
+
+
