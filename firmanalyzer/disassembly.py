@@ -12,30 +12,46 @@ from collections import defaultdict
 import queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from client import create_openai_client
-from typing import List,Optional
+from typing import List, Optional
+import sys
 
-def get_logger(name, save_path=None):
+class ThreadLogCollector:
+    def __init__(self):
+        self.logs = defaultdict(list)
+        self.lock = threading.Lock()
+    
+    def add_log(self, thread_id: int, message: str):
+        with self.lock:
+            self.logs[thread_id].append(message)
+    
+    def get_logs(self, thread_id: int) -> List[str]:
+        with self.lock:
+            return self.logs.pop(thread_id, [])
+
+def get_logger(name, save_path=None, log_collector=None):
     logger = logging.getLogger(name)
     logger.handlers = []
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(levelname)s %(name)s: %(message)s')
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
     
-    if save_path:
-        try:
-            os.makedirs(save_path, exist_ok=True)
-            log_file = os.path.join(save_path, 'disassembly.log')
-            
-            file_handler = logging.FileHandler(log_file, mode='w')
-            file_handler.setFormatter(formatter)
-            file_handler.setLevel(logging.INFO)
-            logger.addHandler(file_handler)
-            logger.info(f"[Logger] Initialized log file: {log_file}")
-        except Exception as e:
-            print(f"Error setting up log file: {str(e)}")
+    class CollectorHandler(logging.Handler):
+        def emit(self, record):
+            if log_collector:
+                thread_id = threading.get_ident()
+                message = self.format(record)
+                log_collector.add_log(thread_id, message)
+    
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s',
+                                datefmt='%H:%M:%S')
+    
+    collector_handler = CollectorHandler()
+    collector_handler.setFormatter(formatter)
+    logger.addHandler(collector_handler)
+    
+    if os.getenv('DEBUG'):
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+    
     logger.propagate = False
     return logger
 
@@ -78,7 +94,8 @@ class R2Analyzer(cmd.Cmd):
                  find_dangerous_timeout: int = 900,
                  target_functions: List[str] = None):
         super().__init__()
-        self.disassembly_logger = get_logger('R2', save_path)
+        self.log_collector = ThreadLogCollector()
+        self.disassembly_logger = get_logger('R2', save_path, self.log_collector)
         self.disassembly_logger.info(f"[Init] Initializing: {binary_path}")
         self.binary_path = binary_path
         self.r2 = r2pipe.open(binary_path, flags=['-e', 'io.cache=true'])
@@ -316,25 +333,38 @@ class R2Analyzer(cmd.Cmd):
             return 0.0
 
     def _remove_duplicate_chains(self, chains: List[List[dict]]) -> List[List[dict]]:
+        """Remove duplicate and subset call chains
+        
+        Args:
+            chains: List of call chains to deduplicate
+            
+        Returns:
+            List[List[dict]]: Deduplicated call chains
+        """
         try:
             if not chains:
                 return []
             
+            # Sort chains by length (longest first)
             sorted_chains = sorted(chains, key=len, reverse=True)
             unique_chains = []
             
             def is_subchain(shorter, longer):
+                """Check if one chain is a subset of another"""
                 if len(shorter) > len(longer):
                     return False
                 
+                # Convert chains to address sequences for comparison
                 shorter_addrs = [func.get('offset') for func in shorter]
                 longer_addrs = [func.get('offset') for func in longer]
                 
+                # Check if shorter sequence exists in longer sequence
                 for i in range(len(longer_addrs) - len(shorter_addrs) + 1):
                     if shorter_addrs == longer_addrs[i:i + len(shorter_addrs)]:
                         return True
                 return False
             
+            # Add chains that are not subsets of already added chains
             for chain in sorted_chains:
                 is_subset = False
                 for unique_chain in unique_chains:
@@ -425,7 +455,6 @@ class R2Analyzer(cmd.Cmd):
         except Exception as e:
             self.disassembly_logger.error(f"[Chain] Error in call chain analysis: {str(e)}")
             return []
-
     def _init_conversation(self):
         """Initialize conversation history"""
         self.message_history = [{
@@ -746,6 +775,23 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
         except (ValueError, IndexError):
             return False
         
+    def write_analysis_logs(self, function_name: str, thread_id: int):
+        logs = self.log_collector.get_logs(thread_id)
+        if not logs:
+            return
+            
+        log_text = f"\n=== Analysis for {function_name} ===\n"
+        log_text += "\n".join(logs)
+        log_text += "\n=== End of Analysis ===\n\n"
+        
+        with self.r2_lock:
+            if self.save_path:
+                try:
+                    log_file = os.path.join(self.save_path, 'disassembly.log')
+                    with open(log_file, 'a', encoding='utf-8') as f:
+                        f.write(log_text)
+                except Exception as e:
+                    print(f"Error writing logs: {str(e)}")
     def analyze_function_risk(self, ref: dict):
         """Analyze function risk level based on dangerous function calls and call chains
         
@@ -759,6 +805,8 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
                 'call_chains': List[List[dict]] # Complete call chains to entry points
             }
         """
+        thread_id = threading.get_ident()
+        
         self.disassembly_logger.info(
             f"[Analysis] Analyzing function: {ref['function']} @ {hex(ref['address'])}"
         )
@@ -901,15 +949,16 @@ Notice:
                 if 'local_message_history' in locals():
                     local_message_history.clear()
 
+            self.write_analysis_logs(ref['function'], thread_id)
             return last_analysis
 
         except Exception as e:
+            self.write_analysis_logs(ref['function'], thread_id)
             self.disassembly_logger.error(f"[Analysis] Error in risk analysis: {str(e)}")
             last_analysis['reason'] = f"Analysis error: {str(e)}"
             return last_analysis        
         
     def analyze_binary(self):
-        """Main analysis process without parallel processing"""
         @timeout_decorator(self.TIMEOUT_SECONDS)
         def run_analysis():
             if self.save_path:
@@ -929,7 +978,6 @@ Notice:
                 self.disassembly_logger.warning("[!] No call chains found")
                 return "[]"
             
-            # Limit analysis count
             if len(call_chain_results) > self.MAX_ANALYSIS_COUNT:
                 self.disassembly_logger.info(f"[Analysis] Found total {len(call_chain_results)} call chains")
                 self.disassembly_logger.warning(f"[!] Limiting analysis to the top {self.MAX_ANALYSIS_COUNT} highest risk chains")
@@ -938,7 +986,6 @@ Notice:
             all_results = []
             analyzed_chains = 0
             
-            # Analyze each call chain
             for chain_result in call_chain_results:
                 if analyzed_chains >= self.MAX_ANALYSIS_COUNT:
                     break
@@ -966,11 +1013,9 @@ Notice:
                     )
                     continue
 
-            # Save complete results
             if all_results and self.save_path:
                 self._save_final_results(all_results)
             
-            # Filter high risk results
             filtered_results = [
                 result for result in all_results
                 if result.get('risk_level', '').upper() in ['CRITICAL', 'HIGH']
@@ -988,7 +1033,6 @@ Notice:
             return "[]"
 
     def _save_final_results(self, results):
-        """Save analysis results to JSON file with simplified structure"""
         if not self.save_path:
             return
         
@@ -996,7 +1040,6 @@ Notice:
             os.makedirs(self.save_path, exist_ok=True)
             result_file = os.path.join(self.save_path, 'disassembly.json')
             
-            # Flatten nested result list
             flattened_results = []
             for result_group in results:
                 if isinstance(result_group, list):
@@ -1004,7 +1047,6 @@ Notice:
                 else:
                     flattened_results.append(result_group)
             
-            # Simplify result structure
             simplified_results = []
             for result in flattened_results:
                 simplified_result = {
@@ -1026,7 +1068,6 @@ Notice:
             raise
 
     def analyze_binary_parallel(self):
-        """Main analysis process with parallel processing"""
         @timeout_decorator(self.TIMEOUT_SECONDS)
         def run_parallel_analysis():
             if self.save_path:
@@ -1046,18 +1087,14 @@ Notice:
                 self.disassembly_logger.warning("[!] No call chains found")
                 return "[]"
             
-            # Limit analysis count
             if len(call_chain_results) > self.MAX_ANALYSIS_COUNT:
                 self.disassembly_logger.info(f"[Analysis] Found total {len(call_chain_results)} call chains")
                 self.disassembly_logger.warning(f"[!] Limiting analysis to the top {self.MAX_ANALYSIS_COUNT} highest risk chains")
                 call_chain_results = call_chain_results[:self.MAX_ANALYSIS_COUNT]
             
-            # Create thread pool
             with ThreadPoolExecutor(max_workers=min(os.cpu_count(), 4)) as executor:
-                # Prepare task list
                 analysis_tasks = []
                 for chain_result in call_chain_results:
-                    # Create independent analysis parameters for each task
                     analysis_params = {
                         'function': chain_result['caller_function'],
                         'address': chain_result['caller_addr'],
@@ -1065,11 +1102,9 @@ Notice:
                         'dangerous_addr': chain_result['dangerous_addr'],
                         'call_chains': chain_result['call_chains']
                     }
-                    # Submit task to thread pool
                     task = executor.submit(self.analyze_function_risk, analysis_params)
                     analysis_tasks.append(task)
                 
-                # Collect results
                 all_results = []
                 for future in as_completed(analysis_tasks):
                     try:
@@ -1080,13 +1115,10 @@ Notice:
                         self.disassembly_logger.error(f"[Run] Error in parallel analysis task: {str(e)}")
                         continue
             
-            # Save complete results
             if all_results and self.save_path:
-                # Use thread lock to protect file writing
                 with self.r2_lock:
                     self._save_final_results(all_results)
             
-            # Filter high risk results
             filtered_results = [
                 result for result in all_results
                 if result.get('risk_level', '').upper() in ['CRITICAL', 'HIGH']
@@ -1103,10 +1135,211 @@ Notice:
             self.disassembly_logger.error(f"[Run] Error during parallel analysis: {str(e)}")
             return "[]"
 
-
+def test_binary_analysis(binary_path: str, save_path: str = "./test_results") -> bool:
+    try:
+        test_logger = get_logger('R2Test', save_path)
+        test_logger.info("[Test] Starting binary analysis test")
+        
+        test_config = {
+            'max_analysis_count': 3,
+            'timeout_seconds': 600,
+            'command_timeout': 30,
+            'max_iterations': 3,
+            'find_dangerous_timeout': 300
+        }
+        
+        test_logger.info("[Test] Initializing R2Analyzer")
+        analyzer = R2Analyzer(
+            binary_path=binary_path,
+            save_path=save_path,
+            **test_config
+        )
+        
+        test_results = {
+            'init': False,
+            'dangerous_funcs': False,
+            'call_chains': False,
+            'full_analysis': False
+        }
+        
+        try:
+            test_logger.info("[Test] Testing initialization")
+            if analyzer.r2 and analyzer.base_addr is not None:
+                test_results['init'] = True
+                test_logger.info("[Test] ✓ Initialization successful")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Initialization failed: {str(e)}")
+            return False
+            
+        try:
+            test_logger.info("[Test] Testing dangerous function detection")
+            dangerous_refs = analyzer.find_dangerous_functions()
+            if isinstance(dangerous_refs, list):
+                test_results['dangerous_funcs'] = True
+                test_logger.info(f"[Test] ✓ Found {len(dangerous_refs)} dangerous function references")
+                
+                for ref in dangerous_refs[:3]:
+                    test_logger.info(
+                        f"Found: {ref['function']} @ {hex(ref['address'])} "
+                        f"with {len(ref['dangerous_calls'])} dangerous calls"
+                    )
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Dangerous function detection failed: {str(e)}")
+            
+        if test_results['dangerous_funcs'] and dangerous_refs:
+            try:
+                test_logger.info("[Test] Testing call chain analysis")
+                call_chains = analyzer.find_complete_call_chains(dangerous_refs)
+                if isinstance(call_chains, list):
+                    test_results['call_chains'] = True
+                    test_logger.info(f"[Test] ✓ Found {len(call_chains)} call chains")
+                    
+                    for chain in call_chains[:2]:
+                        test_logger.info(
+                            f"Chain for {chain['dangerous_function']}: "
+                            f"Risk score: {chain['risk_score']}"
+                        )
+            except Exception as e:
+                test_logger.error(f"[Test] ✗ Call chain analysis failed: {str(e)}")
+        
+        try:
+            test_logger.info("[Test] Testing full binary analysis")
+            results = analyzer.analyze_binary()
+            if results and results != "[]":
+                test_results['full_analysis'] = True
+                test_logger.info("[Test] ✓ Full analysis completed successfully")
+                
+                parsed_results = json.loads(results)
+                test_logger.info(f"[Test] Found {len(parsed_results)} high-risk results")
+                
+                for result in parsed_results[:2]:
+                    test_logger.info(
+                        f"Risk Level: {result.get('risk_level')} "
+                        f"Function: {result.get('function')}"
+                    )
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Full analysis failed: {str(e)}")
+        
+        passed_tests = sum(test_results.values())
+        total_tests = len(test_results)
+        coverage = (passed_tests / total_tests) * 100
+        
+        test_logger.info("\n=== Test Summary ===")
+        test_logger.info(f"Total Tests: {total_tests}")
+        test_logger.info(f"Passed Tests: {passed_tests}")
+        test_logger.info(f"Coverage: {coverage:.2f}%")
+        for test_name, result in test_results.items():
             test_logger.info(f"{test_name}: {'✓' if result else '✗'}")
         
-        # Clean up
         analyzer.r2.quit()
         
         return all(test_results.values())
+        
+    except Exception as e:
+        if 'test_logger' in locals():
+            test_logger.error(f"[Test] Critical test failure: {str(e)}")
+        return False
+def test_parallel_analysis(binary_path: str, save_path: str = "./parallel_results") -> bool:
+    try:
+        test_logger = get_logger('R2Test', save_path)
+        
+        console_handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s',
+                                    datefmt='%H:%M:%S')
+        console_handler.setFormatter(formatter)
+        test_logger.addHandler(console_handler)
+        
+        test_logger.info("[Test] Starting parallel analysis test")
+        
+        test_config = {
+            'max_analysis_count': 5,
+            'timeout_seconds': 600,
+            'command_timeout': 30,
+            'max_iterations': 3,
+            'find_dangerous_timeout': 300
+        }
+        
+        test_logger.info("[Test] Initializing R2Analyzer")
+        analyzer = R2Analyzer(
+            binary_path=binary_path,
+            save_path=save_path,
+            **test_config
+        )
+        
+        test_results = {
+            'init': False,
+            'parallel_analysis': False,
+            'log_collection': False,
+            'thread_safety': False
+        }
+        
+        try:
+            if analyzer.r2 and analyzer.base_addr is not None:
+                test_results['init'] = True
+                test_logger.info("[Test] ✓ Initialization successful")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Initialization failed: {str(e)}")
+            return False
+        
+        try:
+            test_logger.info("[Test] Testing parallel analysis")
+            results = analyzer.analyze_binary_parallel()
+            parsed_results = json.loads(results)
+            
+            if isinstance(parsed_results, list):
+                test_results['parallel_analysis'] = True
+                test_logger.info(f"[Test] ✓ Parallel analysis completed with {len(parsed_results)} results")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Parallel analysis failed: {str(e)}")
+        
+        try:
+            test_logger.info("[Test] Testing log collection")
+            log_file = os.path.join(save_path, 'disassembly.log')
+            if os.path.exists(log_file):
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    log_content = f.read()
+                
+                if "=== Analysis for" in log_content and "=== End of Analysis ===" in log_content:
+                    test_results['log_collection'] = True
+                    test_logger.info("[Test] ✓ Log collection working correctly")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Log collection test failed: {str(e)}")
+        
+        try:
+            test_logger.info("[Test] Testing thread safety")
+            with open(log_file, 'r', encoding='utf-8') as f:
+                log_content = f.read()
+            
+            start_markers = log_content.count("=== Analysis for")
+            end_markers = log_content.count("=== End of Analysis ===")
+            
+            if start_markers == end_markers and start_markers > 0:
+                test_results['thread_safety'] = True
+                test_logger.info("[Test] ✓ Thread safety verified")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Thread safety test failed: {str(e)}")
+        
+        passed_tests = sum(test_results.values())
+        total_tests = len(test_results)
+        coverage = (passed_tests / total_tests) * 100
+        
+        test_logger.info("\n=== Test Summary ===")
+        test_logger.info(f"Total Tests: {total_tests}")
+        test_logger.info(f"Passed Tests: {passed_tests}")
+        test_logger.info(f"Coverage: {coverage:.2f}%")
+        for test_name, result in test_results.items():
+            test_logger.info(f"{test_name}: {'✓' if result else '✗'}")
+        
+        analyzer.r2.quit()
+        
+        return all(test_results.values())
+        
+    except Exception as e:
+        if 'test_logger' in locals():
+            test_logger.error(f"[Test] Critical test failure: {str(e)}")
+        return False
+
+
+
+
+
