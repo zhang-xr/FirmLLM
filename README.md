@@ -18,20 +18,6 @@ FirmLLM is an integrated system that combines firmware collection and analysis c
 
 `firmcrawler` is used for automated collection of firmware files from various manufacturers. The system is built upon and optimized from [WebVoyager](https://langchain-ai.github.io/langgraph/tutorials/web-navigation/web_voyager/) [[paper]](https://arxiv.org/abs/2401.13919), implementing a multi-agent collaboration system for large-scale firmware collection. WebVoyager is an innovative Large Multimodal Model (LMM) powered web agent that can complete user instructions end-to-end by interacting with real-world websites.
 
-#### Vendor URL
-- D-Link: `https://support.dlink.com/AllPro.aspx`
-- Foscam: `https://www.foscam.com/download-center/firmware-downloads.html`
-- Mercury: `http://service.mercurycom.com.cn/download-list.html`
-- MikroTik: `https://www.mikrotik.com/download`
-- OpenWrt: `https://downloads.openwrt.org/releases/`
-- QNAP: `https://www.qnap.com/en/download/`
-- Supermicro: `https://www.supermicro.com/zh_cn/products/motherboards/embedded-iot-boards`
-- TP-Link:
-  - English: `https://www.tp-link.com/hk/support/download/`
-  - Chinese: `https://resource.tp-link.com.cn/?productorlist=0`
-- UI: `https://www.ui.com/download/`
-- Zyxel: `https://www.zyxel.com/global/en/products`
-
 #### Main Features
 - Automated web interaction and downloads
 - Intelligent firmware information collection
@@ -76,9 +62,6 @@ The requirements.yaml allows users to customize:
 - Risk severity classifications
 - Report and summary formats
 
-#### Data Sources
-- FirmSec Dataset: https://github.com/NESA-Lab/FirmSecDataset
-
 ### 3. Analysis Result Samples
 
 `deepseekSamples` contains analysis results using DeepSeek-v3 and DeepSeek-r1 models.
@@ -87,12 +70,6 @@ The requirements.yaml allows users to customize:
 - `explore.log`: Complete firmware analysis process example
 - `report.txt`: Detailed security analysis report by file
 - `summary.txt`: Overall firmware security issues summary and risk level assessment
-
-#### Sample Firmware
-- OpenWrt mainline version
-- D-Link DAP-2690
-- MikroTik RouterOS
-- UI firmware
 
 ## Notes
 
