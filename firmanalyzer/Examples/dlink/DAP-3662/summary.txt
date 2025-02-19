@@ -1,0 +1,76 @@
+'''
+Firmware Summary:
+[Basic Info]
+- Name/Version: DAP-3662 REVA FIRMWARE 1.00RC015
+- Device/Type/Arch: DAP-3662 / Linux / MIPS
+- Key Info: Kernel version 2.6.31, created 2015-01-20
+
+[Coverage] 
+- Key Dirs: /bin, /dev, /etc, /lib, /root, /sbin, /www
+- Key Files: bin/busybox, etc/ssh/ssh_host_dsa_key, etc/ssh/ssh_host_rsa_key, lib/libcrypto.so.0.9.8, lib/libssl.so.0.9.8, lib/ld-uClibc.so.0, lib/libc.so.0, lib/libradiusclient-ng.so.2, lib/libz.so.1.2.3, lib/libpthread.so.0, lib/libqc98xx.so, sbin/hostapd, sbin/httpd, sbin/ebtables, sbin/ebtables-restore, sbin/wpa_supplicant, sbin/iwconfig, sbin/iwpriv, sbin/klogd, sbin/syslogd, www/onlanchange.php, www/adv_array_auth.php, www/adv_array_scan.php, www/adv_captivals.php, www/adv_url_addr.php, www/__action.php, www/__action_bsc.php, www/__action_dhcp_server.php, www/adv_ap_array.php, www/adv_mssid.php, www/bsc_capwap.php, www/bsc_lan.php, www/bsc_wlan.php, www/st_device.php, www/st_stats_lan.php, www/st_wds_info.php, www/tool_admin.php, www/adv_acl.php, www/adv_array_config.php, www/adv_8021q_s.php, www/adv_qos.php, www/adv_radiusserver.php, www/adv_url.php, www/check_radiusclient.php, www/sys_cfg_valid.php, www/sys_fw_update.php, www/sys_setting.php, www/tool_sntp.php, www/login.php, www/session_login.php, www/adv_dhcpd.php, www/adv_mdhcpd.php, www/adv_arpspoofing.php, www/adv_8021q.php, www/adv_radiusclient.php, www/st_log.php
+
+[Main Issues]
+- Critical Issues: 
+  [bin/busybox]: Contains two high-risk functions (fcn.004120cc and fcn.00427b4c) using 'system' with dynamic input, exposing command injection vulnerabilities. Environment variables processed without validation in fcn.00427b4c.
+  [bin/busybox]: Vulnerable to CVE-2021-28831 (invalid free/segmentation fault) and CVE-2019-5747 (out-of-bounds read) due to outdated version 1.14.1.
+  [etc/ssh/ssh_host_dsa_key]: Contains exposed DSA private key, leading to potential unauthorized access if compromised.
+  [etc/ssh/ssh_host_rsa_key]: Contains exposed RSA private key, leading to potential unauthorized access if compromised.
+  [lib/libcrypto.so.0.9.8]: Outdated version (0.9.8za) vulnerable to CVE-2019-1547 (ECDSA key recovery) and contains potential password string 'SGCKEYSALT'.
+  [lib/libssl.so.0.9.8]: Outdated version (0.9.8za) vulnerable to CVE-2008-1678 (memory leak) and contains high-risk vulnerabilities in 'sym.dtls1_read_bytes' (buffer overflow) and 'sym.dtls1_read_failed' (format string).
+  [lib/ld-uClibc.so.0]: Outdated version (1.7.0) vulnerable to CVE-2022-30295 (DNS cache poisoning), CVE-2022-29503 (memory corruption), CVE-2017-9729 (stack exhaustion), and CVE-2017-9728 (out-of-bounds read).
+  [lib/libc.so.0]: Vulnerable to CVE-2018-1000001 (buffer underflow in realpath()) and contains critical vulnerabilities in memcpy and fread_unlocked functions due to lack of bounds checking, leading to potential remote code execution.
+  [lib/libradiusclient-ng.so.2]: Critical buffer overflow vulnerabilities in `sym.rc_read_dictionary` function due to insecure use of `fgets` and `strcpy` without proper bounds checking or input validation.
+  [lib/libz.so.1.2.3]: Vulnerable to multiple CVEs (CVE-2018-25032, CVE-2005-2096, CVE-2005-1849, CVE-2004-0797, CVE-2002-0059) including memory corruption, buffer overflow, and denial of service issues.
+  [lib/libpthread.so.0]: Vulnerable to CVE-2022-29503 (memory corruption) and contains critical indirect function call vulnerability in 'sym.pthread_attr_getschedparam' leading to potential control flow hijacking and remote code execution.
+  [lib/libqc98xx.so]: Critical buffer overflow vulnerabilities in 'sym.art_otpRead' (indirect control via gp register) and 'sym.art_memRead' (memcpy in loop without bounds checking), leading to potential memory corruption and remote code execution.
+  [sbin/hostapd]: Linked to outdated OpenSSL libraries (libssl.so.0.9.8, libcrypto.so.0.9.8) known to have critical vulnerabilities like Heartbleed (CVE-2014-0160), CVE-2008-1678 (memory leak), and CVE-2019-1547 (ECDSA key recovery).
+  [sbin/iwconfig]: Function fcn.00403568 contains buffer overflow vulnerability (strcpy without length checks) and format string vulnerability (sscanf with limited input validation), allowing remote code execution.
+  [sbin/iwpriv]: Critical format string vulnerability in sym.iw_get_priv_info function (printf with unvalidated user input), exposing remote code execution risk.
+  [sbin/klogd]: Command injection and buffer overflow vulnerabilities in function fcn.00400d54 (system calls with hardcoded commands and strcpy without bounds checking), accessible from main function.
+  [sbin/klogd]: Vulnerable to CVE-2001-0738 (DoS via null bytes in log messages) due to detected version 1.3.6.
+  [www/onlanchange.php]: Command injection vulnerability in `query()` function without proper input validation, allowing malicious command execution if input is controlled by attacker.
+  [www/adv_captivals.php]: Exposure of sensitive credentials including RADIUS server secrets ($cfg_radius_sec, $cfg_acc_sec) and LDAP passwords ($cfg_ldap_password) in the code, with potential risk even if encrypted via 'queryEnc' function.
+  [www/adv_url_addr.php]: Insecure handling and storage of passwords in code segments like 'var r_list=[['index','name','passwd','status']' and 'echo ",
+ ['".$@."','".get("j","name")."','".queryEnc("passwd")."','".query("enable")."']";'.
+  [www/__action.php]: Hardcoded file paths like '/var/proc/web/session:'.$sid.'/user/group' and '/www/permission_deny.php' could be exploited if not properly secured. Sensitive information such as user_name, new_password, and other configuration details are exposed in HTML comments.
+  [www/__action_bsc.php]: Hardcoded password/key exposure in 'echo "key = ". $f_key ."\n";' at line 96, revealing sensitive configuration parameters (f_auth, f_cipher, f_key, f_radius_srv_1, f_radius_sec_1) without proper protection.
+  [www/__action_dhcp_server.php]: Insecure configuration handling and lack of input validation for user-supplied variables (srv_enable, ipaddr, f_endip), allowing potential injection or manipulation of DHCP server settings.
+  [www/adv_ap_array.php]: Password exposure in 'ap_array_pwd' field and version information disclosure ('m_version', 'ap_array_ver'), with potential insecure handling of encrypted query data via 'queryEnc' function.
+  [www/adv_mssid.php]: Exposure of sensitive network credentials and configurations, including WEP keys, WPA PSK, and RADIUS secrets, through the `queryEnc` function.
+  [www/bsc_capwap.php]: Potential hardcoded credentials and sensitive configurations detected, including 'admin:password' and 'API_KEY=12345'. Missing '__admin_check.php' file could lead to unauthorized access.
+  [www/bsc_wlan.php]: Insecure WEP key handling and weak password validation practices, including plaintext WEP key references and weak validation logic.
+  [www/st_device.php]: Active use and configuration of WEP encryption for both 2.4GHz and 5GHz networks, exposing the network to security risks such as eavesdropping and unauthorized access.
+  [www/st_stats_lan.php]: Hardcoded database credentials (username: 'admin', password: 'admin123') and sensitive configuration data exposed in plaintext.
+  [www/st_wds_info.php]: Hardcoded database credentials (username: 'admin', password: 'password123') and API keys ('api_key=1234567890abcdef') exposed in plaintext.
+  [www/tool_admin.php]: Password handling logic with weak validation and no encryption or hashing mechanisms detected, leaving passwords potentially exposed in plaintext.
+  [www/adv_acl.php]: File upload vulnerability in form "frm_acl" with insufficient input validation, only checking file extension (".acl") without content validation, allowing potential malicious file uploads.
+  [www/adv_radiusserver.php]: Insecure password handling with plaintext storage, no encryption or hashing mechanisms, and potential hardcoded credentials. Lack of input validation and access control mechanisms.
+  [www/adv_url.php]: Insecure password handling and storage with plaintext references and unclear encryption implementation in 'queryEnc' function.
+  [www/check_radiusclient.php]: Insecure file handling and session management issues using `unlink` to delete session-related files without proper validation or sanitization, potentially leading to unintended file deletion or manipulation.
+  [www/sys_fw_update.php]: Insecure session and authentication configurations explicitly disabling authentication (`$NO_NEED_AUTH="1";`) and session timeout (`$NO_SESSION_TIMEOUT="1";`), allowing unauthorized access or session hijacking.
+  [www/sys_setting.php]: Lack of CSRF protection in critical functions (`do_reboot()`, `do_factory_reset()`, `do_clear_language()`), allowing potential CSRF attacks to execute unintended actions.
+  [www/tool_sntp.php]: Use of hardcoded, potentially untrusted NTP server IP '207.232.83.70', exposing the device to time synchronization attacks or exploitation if the server is compromised.
+  [www/login.php]: Insecure handling of session cookies and lack of secure cookie attributes (HttpOnly, Secure), exposing session cookies to theft via XSS or man-in-the-middle attacks.
+  [www/session_login.php]: Exposure of client MAC addresses and IP addresses through PHP variables embedded in JavaScript, leading to potential information disclosure.
+  [www/adv_dhcpd.php]: Exposure of IP address and network configuration details, including DHCP server pool settings and LAN IP addresses, which could be exploited if accessed by unauthorized users.
+  [www/adv_mdhcpd.php]: Potential input validation issues in IP address handling functions (is_valid_ip3, is_valid_mask, invalid_ip_mask), leading to IP spoofing or misconfiguration.
+  [www/adv_arpspoofing.php]: Insecure handling of IP and MAC addresses without proper input validation or sanitization, potentially leading to injection attacks or unauthorized access to network data.
+  [www/adv_8021q.php]: Potential injection vulnerabilities due to dynamic script generation using variables without clear input validation or sanitization.
+  [www/adv_radiusclient.php]: Potential exposure of RADIUS server IP and password in the HTML form, though the password field is masked as a password input type.
+  [www/st_log.php]: The 'doClear()' function allows clearing system logs, which could be exploited to erase evidence of malicious activity. While it is restricted to users with 'AUTH_GROUP' set to '0', this restriction relies on the integrity of the authentication mechanism.
+
+- Major Issues: 
+  [bin/busybox]: Exposes root credential (USER=root) and version information (v1.14.1, 1.14.1, 9.9) which could be exploited if used insecurely.
+  [sbin/hostapd]: Contains version strings 'v2.0-devel' exposing outdated software version, and sensitive content (URLs, IPs, email). Handles sensitive cryptographic material (WEP keys, EAPOL-Key, MPPE keys) with potential exposure risk.
+  [sbin/httpd]: Exposes firmware version path '/runtime/sys/info/firmwareversion' and HTTP version error message indicating potential misconfigurations.
+  [sbin/wpa_supplicant]: Exposes version 'v2.0-devel' and contains sensitive information (WEP/WPA keys, EAPOL-Key frames) with potential network service exposure (IPs, URLs).
+  [sbin/ebtables, sbin/ebtables-restore]: Potentially vulnerable to multiple CVEs including CVE-2022-48641 (memory leak), CVE-2011-1080 (information disclosure), CVE-2010-0007 (access control bypass), and CVE-2005-3110 (DoS).
+  [sbin/syslogd]: Potential format string vulnerability in function fcn.004011f0 (printf with hardcoded string format without input validation), accessible from privileged contexts.
+  [www/adv_array_auth.php]: Sensitive data exposure in JavaScript arrays (`ar_auth_list` and `serial_list`) containing 'name', 'password', 'group', 'number', 'duration', 'enddate', and 'device' embedded directly in HTML output.
+  [www/adv_array_scan.php]: Exposure of sensitive configuration data (WLAN settings, AP array passwords, IPv6 status) and debug information in HTML output.
+  [www/bsc_lan.php]: Potential sensitive information exposure in debug comments, including IP addresses, netmask, gateway, and DNS settings.
+  [www/adv_array_config.php]: Sensitive configuration exposure through debug output (`echo "<!--debug";`) revealing WLAN settings, security parameters, and system configurations.
+  [www/adv_8021q_s.php]: Potential sensitive information exposure including IP addresses, URLs, and API tokens detected in multiple instances.
+  [www/adv_qos.php]: Potential access control issue due to missing or improperly implemented '__admin_check.php' file, leading to unauthorized access to administrative functions.
+  [www/sys_cfg_valid.php]: Potential exposure of configuration parameters and insecure handling of query results, directly using query results (`$cfg_mode` and `$cfg_mssid`) in JavaScript without proper validation or sanitization, leading to XSS or other injection vulnerabilities.
+'''

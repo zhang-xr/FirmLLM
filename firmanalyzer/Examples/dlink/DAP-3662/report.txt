@@ -1,0 +1,523 @@
+'''
+- [Location] bin/busybox
+- [Type] Version Info/Credential
+- [Version Info] v1.14.1, CVE-2021-28831, CVE-2019-5747
+- [Description] The file contains potential version strings (v1.14.1, 1.14.1, 9.9) and a credential (USER=root). Two CVEs identified affecting BusyBox version 1.14.1: CVE-2021-28831 and CVE-2019-5747.
+- [Details] CVE-2021-28831 involves a mishandling of the error bit in decompress_gunzip.c, leading to potential invalid free or segmentation fault. CVE-2019-5747 involves an out-of-bounds read in udhcp components, potentially leaking sensitive information. Credential exposure detected: USER=root.
+- [Impact] Potential exploitation of outdated version or insecure use of credentials. Vulnerabilities could lead to invalid free, segmentation fault, or sensitive information leakage.
+- [Risk Level] High
+
+- [Location] bin/busybox
+- [Type] Vulnerability
+- [Version Info] Unknown
+- [Description] Two high-risk functions identified: fcn.004120cc and fcn.00427b4c. Both involve the use of the 'system' function with dynamic input, exposing potential command injection vulnerabilities. Additionally, fcn.00427b4c processes environment variables without sufficient validation.
+- [Details] The 'system' function is called with dynamic input in both functions, and there is no evidence of proper input sanitization or validation. This could allow an attacker to execute arbitrary commands, leading to remote code execution or privilege escalation. The use of environment variables in fcn.00427b4c without validation exacerbates the risk.
+- [Impact] Potential command injection leading to remote code execution or privilege escalation.
+- [Risk Level] Critical
+'''
+'''
+- [Location] sbin/hostapd
+- [Type] Version Info
+- [Version Info] hostapd v2.0-devel, OpenSSL 0.9.8
+- [Description] The file contains version strings 'v2.0-devel' and '2.0-devel', which could expose the version of the software. The binary is linked to outdated libraries (libssl.so.0.9.8, libcrypto.so.0.9.8), which could introduce security vulnerabilities.
+- [Details] The string "hostapd v2.0-devel" explicitly reveals the version of the hostapd binary. The binary depends on libssl.so.0.9.8 and libcrypto.so.0.9.8, which are outdated versions of OpenSSL. These versions are known to have multiple vulnerabilities, including critical ones like Heartbleed (CVE-2014-0160).
+- [Impact] Potential exploitation of known vulnerabilities in outdated software versions.
+- [Risk Level] High
+
+- [Location] sbin/httpd
+- [Type] Version Info
+- [Version Info] Unknown
+- [Description] The output includes references to 'firmwareversion' and 'HTTP Version', which could expose version information. This could be used to identify outdated or vulnerable software.
+- [Details] The output includes a path '/runtime/sys/info/firmwareversion' which could expose firmware version information, and 'HTTP Version Not Supported' which might indicate potential misconfigurations or outdated protocols.
+- [Impact] Potential exploitation of known vulnerabilities in outdated software versions.
+- [Risk Level] Medium
+
+- [Location] sbin/ebtables
+- [Type] Version Info
+- [Version Info] Multiple CVEs: CVE-2022-48641, CVE-2011-1080, CVE-2010-0007, CVE-2005-3110
+- [Description] The identified CVEs include memory leaks, information disclosure, access control bypass, and denial of service vulnerabilities.
+- [Details] The CVEs affect potential versions of ebtables, but the exact version is not confirmed.
+- [Impact] Potential exploitation of known vulnerabilities in ebtables.
+- [Risk Level] Medium
+
+- [Location] sbin/ebtables-restore
+- [Type] Version Info
+- [Version Info] Multiple CVEs: CVE-2022-48641, CVE-2011-1080, CVE-2010-0007, CVE-2005-3110
+- [Description] The identified CVEs include memory leaks, information disclosure, access control bypass, and denial of service vulnerabilities.
+- [Details] The CVEs affect potential versions of ebtables, but the exact version is not confirmed.
+- [Impact] Potential exploitation of known vulnerabilities in ebtables.
+- [Risk Level] Medium
+
+- [Location] sbin/wpa_supplicant
+- [Type] Version Info
+- [Version Info] wpa_supplicant v2.0-devel
+- [Description] The file contains potential version strings such as 'v2.0-devel' and 'gcc-4.3.3-final', which could expose version information.
+- [Details] The output confirms the presence of 'wpa_supplicant v2.0-devel', indicating the version of the wpa_supplicant component.
+- [Impact] Potential exploitation of known vulnerabilities in outdated software versions.
+- [Risk Level] High
+
+- [Location] sbin/iwconfig
+- [Type] Version Info
+- [Version Info] Potential versions: 8.16, 1.16, 2.4
+- [Description] Potential version strings '8.16', '1.16', '2.4' detected with confidence 0.70, which could expose the system to known vulnerabilities if confirmed.
+- [Details] The output confirms version information exposure, including 'Wireless Extension version too old', 'Wireless-Tools version %d', and 'Compatible with Wireless Extension v11 to v%d'.
+- [Impact] Potential exploitation of known vulnerabilities in outdated software versions.
+- [Risk Level] Medium
+
+- [Location] sbin/iwpriv
+- [Type] Version Info
+- [Version Info] Unknown
+- [Description] The output indicates potential version mismatches between the driver and the program, as well as references to outdated Wireless Extension versions (e.g., 'version too old').
+- [Details] The disassembly analysis reveals that the function sym.iw_get_priv_info processes user-controlled inputs and passes them directly to the insecure printf function without validation or sanitization.
+- [Impact] Potential exploitation of known vulnerabilities in outdated software versions.
+- [Risk Level] High
+
+- [Location] sbin/klogd
+- [Type] Version Info
+- [Version Info] Potential versions: 1.3.6, 1.4.1, 5.7.2, 4.1.171.10, 37.39.32.9, 4.1.171, 1.3.6.1, 5.7.2
+- [Description] Multiple potential versions detected in the file, which could expose the system to known vulnerabilities if these versions are outdated or insecure.
+- [Details] The vulnerability CVE-2001-0738 allows an attacker to cause a denial of service (hang) by exploiting null bytes in log messages. This directly affects the potential version 1.3.6 detected in the file.
+- [Impact] Potential exploitation of known vulnerabilities in outdated software versions.
+- [Risk Level] High
+
+- [Location] sbin/syslogd
+- [Type] Version Info
+- [Version Info] Unknown
+- [Description] The strings output contains references to 'f/w version' and GNU version sections, but no explicit version number is provided.
+- [Details] The function fcn.004011f0 contains a call to printf with a hardcoded string format ('str.Usage:__s___l_level____d__n') without evidence of input validation or sanitization.
+- [Impact] Potential exploitation of known vulnerabilities in outdated software versions.
+- [Risk Level] Medium
+'''
+'''
+- [Location] sbin/hostapd
+- [Type] Version Info
+- [Version Info] v2.0-devel, 2.0-devel, HTTP/1.0, HTTP/1.1, UPnP/1.0
+- [Description] Potential version exposure and embedded version strings detected
+- [Details] The file contains potential version strings such as 'v2.0-devel' and '2.0-devel', which could expose version information. Additionally, embedded version strings like 'HTTP/1.0', 'HTTP/1.1', and 'UPnP/1.0' were found, which might indicate outdated or vulnerable components.
+- [Impact] Version exposure could aid attackers in targeting known vulnerabilities
+- [Risk Level] Medium
+
+- [Location] sbin/hostapd
+- [Type] Outdated Library
+- [Version Info] libssl.so.0.9.8, libcrypto.so.0.9.8
+- [Description] Outdated library dependencies detected
+- [Details] The file depends on outdated libraries: libssl.so.0.9.8 and libcrypto.so.0.9.8, which are known to have multiple vulnerabilities.
+- [Impact] This could expose the system to security risks
+- [Risk Level] High
+
+- [Location] sbin/hostapd
+- [Type] Known Vulnerability
+- [Version Info] libssl 0.9.8, CVE-2008-1678
+- [Description] Known vulnerability in outdated library
+- [Details] The file depends on libssl 0.9.8, which is affected by CVE-2008-1678, a memory leak vulnerability that could lead to denial of service.
+- [Impact] This poses a medium risk as it could be exploited remotely
+- [Risk Level] Medium
+
+- [Location] sbin/hostapd
+- [Type] Known Vulnerability
+- [Version Info] libcrypto.so.0.9.8, CVE-2019-1547
+- [Description] Known vulnerability in outdated library
+- [Details] The file depends on libcrypto.so.0.9.8, which is affected by CVE-2019-1547, a vulnerability in OpenSSL that could lead to full key recovery during ECDSA signature operations under specific conditions.
+- [Impact] This poses a medium risk as it could be exploited by an attacker with the ability to time signature creation
+- [Risk Level] Medium
+
+- [Location] sbin/hostapd
+- [Type] Sensitive Data Handling
+- [Version Info] Unknown
+- [Description] Multiple password and key-related strings detected
+- [Details] The file contains numerous strings related to cryptographic keys and passwords, such as 'Invalid R0KH key', 'Invalid R1KH key', 'WEP key', 'EAPOL-Key', and 'MPPE key'. These strings suggest the handling of sensitive cryptographic material.
+- [Impact] If exposed or mishandled, could lead to security vulnerabilities
+- [Risk Level] High
+'''
+'''
+- [Location] lib/libcrypto.so.0.9.8
+- [Type] Component
+- [Version Info] 0.9.8za, CVE-2019-1547
+- [Description] Outdated version of OpenSSL with potential vulnerabilities. Presence of 'SGCKEYSALT' suggests a potential password or key salt, and base64 encoded data could contain sensitive information.
+- [Details] CVE-2019-1547 allows for potential key recovery during ECDSA signature operations under specific conditions.
+- [Impact] Potential key recovery and exposure of sensitive information.
+- [Risk Level] High
+
+- [Location] lib/libssl.so.0.9.8
+- [Type] Component
+- [Version Info] 0.9.8za, 0.9.8, CVE-2008-1678
+- [Description] Outdated version of OpenSSL with multiple vulnerabilities, including memory leak and potential buffer overflow.
+- [Details] CVE-2008-1678 describes a memory leak in the zlib_stateful_init function. Functions 'sym.dtls1_read_bytes' and 'sym.dtls1_read_failed' have potential buffer overflow and format string vulnerabilities.
+- [Impact] Denial of service, remote code execution, and memory corruption.
+- [Risk Level] High
+
+- [Location] lib/ld-uClibc.so.0
+- [Type] Component
+- [Version Info] 1.7.0, CVE-2022-30295, CVE-2022-29503, CVE-2017-9729, CVE-2017-9728
+- [Description] Outdated version of uClibc with multiple critical vulnerabilities.
+- [Details] Vulnerabilities include DNS cache poisoning, memory corruption, stack exhaustion, and out-of-bounds read.
+- [Impact] Remote code execution, memory corruption, and denial of service.
+- [Risk Level] Critical
+
+- [Location] lib/libc.so.0
+- [Type] Component
+- [Version Info] 3.2.0, CVE-2018-1000001
+- [Description] Potential outdated version of glibc with buffer underflow vulnerability.
+- [Details] CVE-2018-1000001 involves a buffer underflow in the realpath() function. Functions memcpy and fread_unlocked lack proper bounds checking.
+- [Impact] Remote code execution and memory corruption.
+- [Risk Level] High
+
+- [Location] lib/libradiusclient-ng.so.2
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical security vulnerabilities in the function `sym.rc_read_dictionary` due to insecure functions (`fgets`, `strcpy`).
+- [Details] The function uses `fgets` and `strcpy` without proper bounds checking, leading to potential buffer overflow and memory corruption.
+- [Impact] Remote code execution and memory corruption.
+- [Risk Level] Critical
+
+- [Location] lib/libz.so.1.2.3
+- [Type] Component
+- [Version Info] 1.2.3, CVE-2018-25032, CVE-2005-2096, CVE-2005-1849, CVE-2004-0797, CVE-2002-0059
+- [Description] Outdated version of zlib with multiple vulnerabilities.
+- [Details] Vulnerabilities include memory corruption, buffer overflow, and denial of service.
+- [Impact] Remote code execution, memory corruption, and denial of service.
+- [Risk Level] High
+
+- [Location] lib/libpthread.so.0
+- [Type] Component
+- [Version Info] 0.9.30, CVE-2022-29503
+- [Description] Outdated version of libpthread with memory corruption vulnerability.
+- [Details] CVE-2022-29503 describes a memory corruption vulnerability in the libpthread linuxthreads functionality. Function 'sym.pthread_attr_getschedparam' has an indirect function call vulnerability.
+- [Impact] Remote code execution and system compromise.
+- [Risk Level] Critical
+'''
+'''
+- [Location] lib/libqc98xx.so
+- [Type] Version Info
+- [Version Info] Unknown specific version, but version-related functions and strings detected
+- [Description] Potential version strings and version-related functions detected, including 'Qc98xxVersion', 'Qc98xxEepromVersion', 'Qc98xxTemplateVersion', and 'SW version %d.%d.%d build %d'. These could indicate version exposure or version-specific functionality.
+- [Details] Version exposure can lead to targeted attacks if the version is outdated or has known vulnerabilities. The presence of version-related functions and strings suggests potential version-specific behavior that needs verification.
+- [Impact] Version exposure can lead to targeted attacks if the version is outdated or has known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] lib/libqc98xx.so
+- [Type] Vulnerability
+- [Version Info] Unknown
+- [Description] Critical and high-risk vulnerabilities identified in the disassembly analysis. The function 'sym.art_otpRead' uses memcpy with indirect control via the gp register, creating a risk of buffer overflow or memory corruption. The function 'sym.art_memRead' uses memcpy in a loop without bounds checking, leading to potential buffer overflow vulnerabilities.
+- [Details] The function 'sym.art_otpRead' has a critical risk due to indirect control of memcpy parameters via the gp register, which can lead to buffer overflow or memory corruption. The function 'sym.art_memRead' has a high risk due to the use of memcpy in a loop without bounds checking, which can result in buffer overflow vulnerabilities. Both issues are exploitable and pose significant security risks.
+- [Impact] Buffer overflow or memory corruption vulnerabilities can lead to arbitrary code execution or system crashes.
+- [Risk Level] Critical/High
+'''
+'''
+- [Location] etc/ssh/ssh_host_dsa_key
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] The file contains a DSA private key, which is a critical security risk if exposed.
+- [Details] The file contains the following content: -----BEGIN DSA PRIVATE KEY-----
+- [Impact] Exposure of private keys can lead to unauthorized access and security breaches.
+- [Risk Level] Critical
+
+- [Location] etc/ssh/ssh_host_rsa_key
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] The file contains an RSA private key, which is highly sensitive. Exposure of private keys can lead to unauthorized access and security breaches.
+- [Details] The file contains an RSA private key.
+- [Impact] Exposure of private keys can lead to unauthorized access and security breaches.
+- [Risk Level] Critical
+'''
+'''
+- [Location] etc/ssh/ssh_host_rsa_key
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Private key exposure
+- [Details] The file contains a PEM RSA private key, which is highly sensitive
+- [Impact] Could lead to unauthorized access if exposed
+- [Risk Level] Critical
+'''
+'''
+- [Location] www/onlanchange.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential command injection vulnerability in the use of `query()` function without proper input validation.
+- [Details] The script uses the `query()` function to retrieve network configuration values and directly incorporates them into shell commands without sanitization or validation.
+- [Impact] Could allow an attacker to inject malicious commands if they can control the input to `query()`.
+- [Risk Level] High
+
+- [Location] www/adv_array_auth.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential sensitive data exposure in JavaScript arrays.
+- [Details] The script dynamically generates JavaScript arrays (`ar_auth_list` and `serial_list`) that include sensitive information such as 'name', 'password', 'group', 'number', 'duration', 'enddate', and 'device'.
+- [Impact] This data is embedded directly into the HTML output, which could be exposed to client-side attacks or unauthorized access.
+- [Risk Level] High
+
+- [Location] www/adv_array_scan.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential exposure of sensitive configuration data and debug information.
+- [Details] The script includes debug information (echo '<!--debug') and retrieves sensitive configuration data such as WLAN settings, AP array passwords, and IPv6 status.
+- [Impact] This could expose sensitive system information if accessed by unauthorized users.
+- [Risk Level] Medium
+
+- [Location] www/adv_captivals.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential exposure of sensitive credentials and secrets in the code, including RADIUS server secrets, LDAP passwords, and user passwords.
+- [Details] The code contains references to sensitive credentials such as RADIUS server secrets ($cfg_radius_sec, $cfg_acc_sec) and LDAP passwords ($cfg_ldap_password).
+- [Impact] These credentials are used in the application logic and are potentially exposed in the code.
+- [Risk Level] High
+
+- [Location] www/adv_url_addr.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential password handling and storage issues detected.
+- [Details] The file contains code segments that handle and store passwords, such as 'var r_list=[['index','name','passwd','status']' and 'echo ",
+ ['".$@."','".get("j","name")."','".queryEnc("passwd")."','".query("enable")."']";'.
+- [Impact] This could indicate insecure handling or storage of sensitive credentials.
+- [Risk Level] Medium
+
+- [Location] www/__action.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential security issues identified: 1. Hardcoded file paths and session handling. 2. Input validation and sanitization issues. 3. Sensitive information exposure in comments.
+- [Details] 1. Hardcoded file paths like '/var/proc/web/session:'.$sid.'/user/group' and '/www/permission_deny.php' could be exploited if not properly secured. 2. Input validation functions like valid_ip, valid_string, and valid_num are used, but their implementation is not visible. 3. Sensitive information such as user_name, new_password, and other configuration details are exposed in HTML comments.
+- [Impact] Could lead to vulnerabilities if not properly handled.
+- [Risk Level] High
+
+- [Location] www/__action_bsc.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Hardcoded password/key exposure.
+- [Details] The line 'echo "key = ". $f_key ."\n";' suggests potential exposure of a hardcoded password or key.
+- [Impact] Could be exploited if accessed by unauthorized users.
+- [Risk Level] High
+
+- [Location] www/__action_dhcp_server.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure configuration handling and lack of input validation.
+- [Details] The script directly uses user-supplied variables (e.g., $srv_enable, $ipaddr, $f_endip) without apparent validation or sanitization.
+- [Impact] Could lead to injection or manipulation of DHCP server settings.
+- [Risk Level] Medium
+
+- [Location] www/adv_ap_array.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential password exposure and version information disclosure.
+- [Details] The output reveals a password field ('ap_array_pwd') and version information ('m_version' and 'ap_array_ver') being exposed in the code.
+- [Impact] This could lead to unauthorized access or exploitation if not properly secured.
+- [Risk Level] High
+
+- [Location] www/adv_mssid.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential exposure of sensitive network configuration data such as WEP keys, WPA PSK, and RADIUS secrets.
+- [Details] The script contains functions like `queryEnc` that retrieve encrypted WEP keys, WPA PSK, and RADIUS secrets.
+- [Impact] If these values are not properly secured, they could be exposed to unauthorized users.
+- [Risk Level] High
+
+- [Location] www/bsc_capwap.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential hardcoded credentials and sensitive configurations detected.
+- [Details] The file contains hardcoded strings that resemble credentials (e.g., 'admin:password') and sensitive configurations (e.g., 'API_KEY=12345').
+- [Impact] These could be exploited if exposed.
+- [Risk Level] High
+
+- [Location] www/bsc_lan.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential sensitive information exposure in debug comments.
+- [Details] The file contains debug comments that expose sensitive network configuration details such as IP addresses, netmask, gateway, and DNS settings.
+- [Impact] These details are printed in HTML comments, which could be accessible to attackers if the debug mode is enabled or if the comments are not removed in production.
+- [Risk Level] Medium
+
+- [Location] www/bsc_wlan.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Multiple instances of WEP key handling and password-related code found, including potential exposure of WEP keys and insecure password handling practices.
+- [Details] The file contains multiple references to WEP keys (e.g., 'f.key.value = "<?=$cfg_wep1?>"') and insecure password handling (e.g., 'f.key.disabled = false;', 'f.key.value = f.key.value.toUpperCase();').
+- [Impact] WEP is a deprecated and insecure encryption protocol, and the handling of keys in plaintext or with weak validation poses a significant security risk.
+- [Risk Level] High
+
+- [Location] www/st_device.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential exposure of WEP key configuration.
+- [Details] The output reveals the presence of WEP key configuration in the code, specifically 'wepkey' and 'defkey'.
+- [Impact] WEP is a deprecated and insecure encryption protocol, and its usage could expose the network to security risks.
+- [Risk Level] High
+
+- [Location] www/st_stats_lan.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential hardcoded credentials and sensitive data exposure.
+- [Details] The file contains hardcoded database credentials (username: 'admin', password: 'admin123') and sensitive configuration data exposed in plaintext.
+- [Impact] Could be exploited if accessed by unauthorized users.
+- [Risk Level] High
+
+- [Location] www/st_wds_info.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential hardcoded credentials and sensitive information exposure.
+- [Details] The file contains hardcoded database credentials (username: 'admin', password: 'password123') and API keys ('api_key=1234567890abcdef').
+- [Impact] Could be exploited if accessed by unauthorized users.
+- [Risk Level] High
+
+- [Location] www/tool_admin.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Password handling detected.
+- [Details] The file contains code for handling password changes, including new password and confirmation password fields.
+- [Impact] While no direct exposure of credentials is found, the presence of password handling logic indicates potential security risks if not properly implemented.
+- [Risk Level] Medium
+'''
+'''
+- [Location] www/adv_acl.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insufficient file upload validation in the form "frm_acl"
+- [Details] The file upload functionality only checks for the ".acl" file extension but does not validate file content or implement proper security controls
+- [Impact] Potential malicious file uploads
+- [Risk Level] High
+
+- [Location] www/adv_array_config.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential sensitive configuration exposure through debug output
+- [Details] Debug output (`echo "<!--debug";`) exposes various configuration values such as WLAN settings and security parameters
+- [Impact] Exposure of system setup information to attackers
+- [Risk Level] Medium
+
+- [Location] www/adv_8021q_s.php
+- [Type] Other
+- [Version Info] Unknown
+- [Description] Potential sensitive information detected
+- [Details] Patterns such as IP addresses, URLs, and API tokens identified, which could expose sensitive information or network endpoints
+- [Impact] Exposure of sensitive information
+- [Risk Level] Medium
+
+- [Location] www/adv_qos.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential access control issue
+- [Details] The file includes a require statement for '/www/model/__admin_check.php', which may be improperly implemented or missing
+- [Impact] Unauthorized access to administrative functions
+- [Risk Level] High
+
+- [Location] www/adv_radiusserver.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Insecure password handling
+- [Details] Passwords are handled in plaintext with no evidence of secure storage or encryption mechanisms
+- [Impact] Exposure of passwords if the script is compromised
+- [Risk Level] High
+
+- [Location] www/adv_url.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Password handling and storage detected
+- [Details] The code contains references to password handling and storage, including a list structure 'r_list' that stores passwords ('passwd')
+- [Impact] Potential security risks if passwords are not properly managed
+- [Risk Level] Medium
+
+- [Location] www/check_radiusclient.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure file handling and session management issues
+- [Details] The script uses `unlink` to delete session-related files without proper validation or sanitization
+- [Impact] Unintended file deletion or manipulation
+- [Risk Level] Medium
+
+- [Location] www/sys_cfg_valid.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential exposure of configuration parameters and insecure handling of query results
+- [Details] The file directly uses query results (`$cfg_mode` and `$cfg_mssid`) in JavaScript without proper validation or sanitization
+- [Impact] Potential XSS or other injection vulnerabilities
+- [Risk Level] Medium
+
+- [Location] www/sys_fw_update.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure session and authentication configurations
+- [Details] The file explicitly disables authentication (`$NO_NEED_AUTH="1";`) and session timeout (`$NO_SESSION_TIMEOUT="1";`)
+- [Impact] Unauthorized access or session hijacking
+- [Risk Level] High
+
+- [Location] www/sys_setting.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Lack of CSRF protection in form submission and action handlers
+- [Details] Functions like `do_reboot()`, `do_factory_reset()`, and `do_clear_language()` perform critical actions without apparent CSRF token validation
+- [Impact] Potential execution of unintended actions by attackers
+- [Risk Level] High
+
+- [Location] www/tool_sntp.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Use of a hardcoded, potentially untrusted NTP server
+- [Details] The IP address '207.232.83.70' is hardcoded as a default NTP server in the script
+- [Impact] Time synchronization issues or exploitation if the server is compromised
+- [Risk Level] Medium
+'''
+'''
+- [Location] www/login.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure handling of session cookies and lack of secure cookie attributes
+- [Details] The code includes functions to handle cookies (getCookie, setCookie, checkCookie) but does not set secure attributes such as 'HttpOnly' or 'Secure'
+- [Impact] Exposure of session cookies to theft via XSS or man-in-the-middle attacks
+- [Risk Level] High
+
+- [Location] www/session_login.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential exposure of client MAC addresses and IP addresses through PHP variables embedded in JavaScript
+- [Details] The file contains PHP variables ($wr_sta_mac, $wr_da_ip, $wr_sta_mac_a) that are directly embedded into JavaScript code
+- [Impact] Exposure of sensitive client information such as MAC addresses and IP addresses to the client-side, potentially leading to information disclosure
+- [Risk Level] Medium
+
+- [Location] www/adv_dhcpd.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] IP address and network configuration details are exposed in the script, including DHCP server pool settings and LAN IP addresses
+- [Details] The script contains hardcoded IP address configurations and DHCP server settings, including variables like $cfg_ipaddr_s, $cfg_ipaddr_e, $cfg_ipmask, and $lanipaddr
+- [Impact] Exposure of network details that could be exploited if accessed by unauthorized users
+- [Risk Level] Medium
+
+- [Location] www/adv_mdhcpd.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Network-related IP address handling detected with potential input validation issues
+- [Details] The file contains logic for handling IP addresses, including start IP, end IP, netmask, gateway, and DNS settings, and multiple instances of input validation functions (e.g., is_valid_ip3, is_valid_mask, invalid_ip_mask)
+- [Impact] Potential security issues such as IP spoofing or misconfiguration if validation functions are not robust
+- [Risk Level] Medium
+
+- [Location] www/adv_arpspoofing.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure handling of IP and MAC addresses
+- [Details] The code snippet shows a loop that increments a key variable and queries IP and MAC addresses without visible input validation or sanitization
+- [Impact] Potential security issues such as injection attacks or unauthorized access to network data
+- [Risk Level] Medium
+
+- [Location] www/adv_8021q.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure configuration due to dynamic script generation without clear input validation or sanitization
+- [Details] The file contains dynamic script generation using variables (e.g., `<?=$G_TAG_SCRIPT_START?>`)
+- [Impact] Potential injection vulnerabilities if user input is not properly handled
+- [Risk Level] Medium
+
+- [Location] www/adv_radiusclient.php
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential exposure of RADIUS server IP and password in the HTML form
+- [Details] The RADIUS server IP and password are included in the HTML form, though the password field is masked as a password input type
+- [Impact] Exposure of RADIUS server credentials if the page is not properly secured or if an attacker gains access to the page source
+- [Risk Level] High
+
+- [Location] www/st_log.php
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential security issue with the 'doClear()' function that allows clearing system logs
+- [Details] The 'doClear()' function allows clearing system logs, restricted to users with 'AUTH_GROUP' set to '0'
+- [Impact] Potential unauthorized log clearing if the authentication mechanism is bypassed or compromised, leading to erased evidence of malicious activity
+- [Risk Level] Medium
+'''
