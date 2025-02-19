@@ -481,6 +481,7 @@ def build_graph(system_prompt, retain_human_messages=0, max_messages=10, save_pa
         graph_builder.add_edge(node_name, "update_scratchpad")
 
     def select_tool(state: AgentState):
+        logger = logging.getLogger('Crawler')
         action = state["response"]["action"]
         action_input = state["response"]["args"]
 
