@@ -133,7 +133,6 @@ class BaseAgent:
         url = url.split('://')[-1]
         # 替换特殊字符
         safe_name = "".join(c if c.isalnum() else '_' for c in url)
-        # 避免文件名过长
         return safe_name[:100] if len(safe_name) > 100 else safe_name
 
     async def run(self, url: str):
@@ -161,7 +160,6 @@ class BaseAgent:
             return result
         except Exception as e:
             logger.error(f"Error processing URL {url}: {str(e)}")
-            # 返回一个表示错误的结果，而不是抛出异常
             return {
                 "status": "error",
                 "url": url,
@@ -189,7 +187,6 @@ class Inspector(BaseAgent):
             return "UNKNOWN"
             
         try:
-            # 尝试从 action input 中提取页面类型
             # 预期格式: ['EXPLORER'] 或 ['SCRAPER'] 或 ['ALL'] 或 ['UNKNOWN']
             if isinstance(result, list) and len(result) > 0:
                 page_type = result[0].strip().upper()
@@ -200,7 +197,6 @@ class Inspector(BaseAgent):
                 print(f"Inspector: Unexpected result format: {type(result)}, defaulting to UNKNOWN")
                 return "UNKNOWN"
             
-            # 验证页面类型是否有效
             valid_types = {"EXPLORER", "SCRAPER", "ALL", "UNKNOWN"}
             if page_type not in valid_types:
                 print(f"Inspector: Invalid page type '{page_type}', defaulting to UNKNOWN")
@@ -297,7 +293,6 @@ class WebCrawler:
         self.logger = logging.getLogger('Crawler')
         self.logger.info("Initializing WebCrawler")
         
-        # 验证必要参数
         if not save_path:
             self.logger.error("save_path cannot be empty")
             raise ValueError("save_path不能为空")
@@ -309,12 +304,10 @@ class WebCrawler:
                         f"\n - Max concurrent: {MAX_CONCURRENT}"
                         f"\n - Crawl delay: {CRAWL_DELAY}s")
             
-        # 初始化基本属性
         self.save_path = save_path
         self.type_list = type_list or PRODUCT_TYPES
         self.max_depth = max_depth
         
-        # 创建保存目录
         try:
             os.makedirs(save_path, exist_ok=True)
             self.logger.debug(f"Created save directory: {save_path}")
@@ -329,7 +322,6 @@ class WebCrawler:
         self.semaphore = Semaphore(MAX_CONCURRENT)
         self.last_request_time = 0
         
-        # 初始化代理实例
         try:
             self.inspector = Inspector(**inspector_kwargs)
             self.explorer = Explorer(**explorer_kwargs)
