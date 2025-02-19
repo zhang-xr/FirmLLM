@@ -3,15 +3,6 @@
 FirmLLM is an integrated system that combines firmware collection and analysis capabilities, utilizing Large Language Models (LLM) for intelligent firmware analysis. The system consists of two core modules: the firmware collection system (FirmCrawler) and the firmware analysis system (FirmAnalyzer). Both systems employ a multi-agent collaboration approach based on user-customized prompts to achieve autonomous exploration and analysis.
 
 
-## Project Structure
-
-```
-.
-├── firmcrawler/       # Firmware Collection System
-├── firmanalyzer/      # Firmware Analysis System
-└── deepseekSamples/   # Analysis Result Samples
-```
-
 ## System Components
 
 ### 1. Firmware Collection System (FirmCrawler)
