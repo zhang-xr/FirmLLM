@@ -55,7 +55,7 @@ The requirements.yaml allows users to customize:
 
 ### 3. Analysis Result Samples
 
-`deepseekSamples` contains analysis results using DeepSeek-v3 and DeepSeek-r1 models.
+`Examples` contains analysis results using DeepSeek-v3 and DeepSeek-r1 models.
 
 #### Analysis Logs and Reports
 - `explore.log`: Complete firmware analysis process example
