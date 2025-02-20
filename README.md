@@ -33,7 +33,7 @@ FirmLLM is an integrated system that combines firmware collection and analysis f
 - Security risk assessment
 
 #### Core Files
-- `main.py`: System entry point
+- `run.py`: System entry point
 - `explore.py`: Firmware exploration
 - `analyze.py`: Firmware file analysis
   - Shell Command Executor: Support for strings, grep, and other Linux tools
