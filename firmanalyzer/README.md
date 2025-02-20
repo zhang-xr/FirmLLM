@@ -56,7 +56,7 @@ sequenceDiagram
 
 ## Requirements
 - Python 3.8+
-- radare2
+- radare2 5.9.9 
 
 
 
