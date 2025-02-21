@@ -1,250 +1,330 @@
-import re
-import subprocess
-import logging
 import os
-import shutil
-from typing import Dict, List
-from collections import defaultdict
-from math import log2
+import re
+import json
+import logging
+import subprocess
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+explorer_logger = logging.getLogger("explorer")
+analyzer_logger = logging.getLogger("analyzer")
 
-PROCESS_TIMEOUT = 30
-MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
-
-VERSION_PATTERNS = [
-    r'(?i)\b(?:v|version)?(?:0|[1-9]\d*[a-z]*)(?:\.(?:0|[1-9]\d*[a-z]*)){1,3}'
-    r'(?:-(?:0|[1-9]\d*|\d*[a-z-][0-9a-z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-z-][0-9a-z-]*))*)?'
-    r'(?:\+[0-9a-z-]+(?:\.[0-9a-z-]+)*)?\b',
-    
-    r'\b(?:20\d{2}(?:[-_./]?(?:0[1-9]|1[0-2]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))'
-    r'{1,2}(?:[-_./]?(?:0[1-9]|[12][0-9]|3[01]))?)\b',
-    
-    r'(?i)\b(?:build|bld|rev|r|rel|release)[-_]?(?:\d+[a-z]*|\d+\.\d+(?:\.\d+){0,2})\b',
-    
-    r'\b(?:\d+\.){3}\d+\b',
-    
-    r'(?i)\b(?:lib|dll|so|module)[-_]?(?:[a-z0-9]+[-_])?v?\d+(?:\.\d+){1,3}[a-z0-9-]*\b',
-    
-    r'\b(?:0x)?[0-9a-f]{4,8}(?:[-_.][0-9a-f]{4,8}){1,3}\b',
-    
-    r'\b(?:[a-z]+-?)(?:20\d{2}[a-z]?|\d+[a-z]{2,})\b',
-    
-    r'(?i)\b[a-z0-9_-]+[/-]v?\d+\.\d+(?:\.\d+)*[a-z0-9.-]*\b',
-    
-    r'(?i)\bv?\d+\.\d+(?:\.\d+)*[-_]?[a-z]+\d*\b',
-    
-    r'\b\d+\.\d+\.\d+[a-z]+\b'
-]
-
-SENSITIVE_PATTERNS = {
-    'password': r'(?i)\b(?:password|passwd|pwd)\s*[:=]\s*["\']?([^\s"\']{8,})["\']?',
-    'api_key': r'(?i)\b(?:api[_-]?key|secret[_-]?key)\s*[:=]\s*["\']?([a-f0-9]{16,}|[A-Za-z0-9+/]{32,})["\']?',
-    'token': r'(?i)\b(?:access[_-]?token|auth[_-]?token|bearer)\s*[:=]\s*["\']?([a-f0-9]{32,}|eyJ[\w-]*\.[\w-]*\.[\w-]*)["\']?',
-    'url': r'(?i)\b(?:https?|ftp)://(?:[^\s:@/]+(?::[^\s@/]*)?@)?(?:[a-z0-9-]+\.)+[a-z]{2,}\b(?:/[^\s"\']*)?',
-    'ip': r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?::\d{1,5})?\b',
-    'email': r'\b[\w.%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b',
-    'firmware_creds': r'(?i)\b(?:admin|root|user)\s*[=:]\s*["\']?(?:admin|root|password|12345|zte521)["\']?',
-    'private_key': r'-----BEGIN (?:RSA|DSA|EC|OPENSSH) PRIVATE KEY-----',
-    'encrypted_data': r'\b(?:AES|DES|3DES|BLOWFISH)[-_]?(?:KEY|IV)\s*[=:]\s*["\']?[0-9a-fA-F]{16,}["\']?',
-    'debug_interface': r'(?i)\b(?:uart|jtag|console)\s*[=:]\s*\d+',
-    'hidden_service': r'(?i)\b(?:backdoor|secret)_(?:port|service)\s*[=:]\s*\d+',
-    'suspicious_path': r'/(?:etc|tmp|var)/(?:passwd|shadow|secret)[^\s"\']*',
-    'base64_data': r'(?:[A-Za-z0-9+/]{4}){20,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?'
-}
-
-class BinaryAnalyzer:
-    def __init__(self, file_path: str):
-        self.file_path = self._validate_file(file_path)
-        self.strings_cache = None
-        self._common_false_positives = {
-            'example.com', 'localhost', 'test.com', 
-            'dummy', 'test', 'example', 'sample',
-            'changeme', 'placeholder', 'TODO', 'FIXME'
-        }
-
-    @staticmethod
-    def _validate_file(path: str) -> str:
-        if not os.path.exists(path):
-            raise ValueError(f"File does not exist: {path}")
-        if os.path.islink(path):
-            raise ValueError("Symbolic links are not supported")
-        if not os.path.isfile(path):
-            raise ValueError("Regular file required")
-        if os.path.getsize(path) > MAX_FILE_SIZE:
-            raise ValueError("File size exceeds limit")
-        return os.path.abspath(path)
-
-    def _get_strings_output(self) -> str:
-        if self.strings_cache is not None:
-            return self.strings_cache
-
-        try:
-            result = subprocess.run(
-                ['strings', self.file_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=PROCESS_TIMEOUT
-            )
-            if result.returncode != 0:
-                logging.warning(f"strings command failed: {result.stderr.decode()[:200]}")
-                return ""
+def check_real_permissions(file_path: str):
+    try:
+        firmware_root = None
+        current_path = file_path
+        while current_path != '/':
+            if 'squashfs-root' in os.path.basename(current_path):
+                firmware_root = current_path
+                break
+            current_path = os.path.dirname(current_path)
             
-            self.strings_cache = result.stdout.decode('utf-8', errors='ignore')
-            return self.strings_cache
-        except Exception as e:
-            logging.error(f"Failed to execute strings: {str(e)}")
-            return ""
-
-    def _safe_grep(self, pattern: str, data: str) -> List[str]:
-        try:
-            compiled = re.compile(pattern)
-            return [m.group() for m in compiled.finditer(data)]
-        except re.error as e:
-            logging.warning(f"Invalid regex pattern {pattern}: {str(e)}")
-            return []
-
-    def _is_false_positive(self, s: str) -> bool:
-        s_lower = s.lower()
-        return any(fp in s_lower for fp in self._common_false_positives) or len(set(s)) < 4
-
-    def extract_versions(self) -> List[str]:
-        versions = []
-        strings_data = self._get_strings_output()
-        
-        for pattern in VERSION_PATTERNS:
-            matches = self._safe_grep(pattern, strings_data)
-            for ver in matches:
-                if len(ver) > 4 and not self._is_false_positive(ver):
-                    versions.append(ver)
-        
-        return sorted(set(versions), key=len, reverse=True)
-
-    def analyze_sensitive_info(self) -> Dict[str, List[str]]:
-        results = defaultdict(list)
-        strings_data = self._get_strings_output()
-        
-        for info_type, pattern in SENSITIVE_PATTERNS.items():
-            matches = self._safe_grep(pattern, strings_data)
-            filtered = [m for m in matches if not self._is_false_positive(m)]
-            
-            if info_type == 'base64_data':
-                filtered = [s for s in filtered if self._validate_base64(s)]
-            
-            results[info_type].extend(filtered[:50])
-
-        return dict(results)
-
-    def _validate_base64(self, s: str) -> bool:
-        import base64
-        try:
-            if len(s) % 4 != 0:
-                return False
-            base64.b64decode(s)
-            return True
-        except:
-            return False
-
-    def analyze_elf_info(self) -> Dict[str, List[str]]:
-        elf_info = defaultdict(list)
-        
-        if not shutil.which('objdump'):
-            logging.warning("objdump not available, skipping ELF analysis")
-            return dict(elf_info)
-        
-        try:
-            section_meta = subprocess.run(
-                ['objdump', '-h', self.file_path],
-                stdout=subprocess.PIPE,
-                timeout=PROCESS_TIMEOUT
-            ).stdout.decode(errors='ignore')
-            
-            section_strategies = {
-                '.rodata': {'min_length': 6, 'filters': [self._is_version_like, self._is_credential_like], 'max_items': 50},
-                '.data': {'min_length': 8, 'filters': [self._is_config_like], 'max_items': 30},
-                '.comment': {'min_length': 4, 'filters': [self._is_compiler_info], 'max_items': 20}
-            }
-            
-            for section, strategy in section_strategies.items():
-                if f"{section} " in section_meta:
-                    content = subprocess.run(
-                        ['objdump', '-s', '-j', section, self.file_path],
-                        stdout=subprocess.PIPE,
-                        timeout=PROCESS_TIMEOUT
-                    ).stdout.decode(errors='ignore')
+        if firmware_root:
+            rel_path = os.path.relpath(file_path, firmware_root)
+            squashfs_file = None
+            for parent in [os.path.dirname(firmware_root), os.path.dirname(os.path.dirname(firmware_root))]:
+                for f in os.listdir(parent):
+                    if f.endswith('.squashfs'):
+                        squashfs_file = os.path.join(parent, f)
+                        break
+                if squashfs_file:
+                    break
                     
-                    candidates = self._extract_meaningful_strings(content, strategy['min_length'])
-                    filtered = [s.strip() for s in candidates if any(f(s.strip()) for f in strategy['filters'])]
-                    if filtered:
-                        elf_info[section] = list(dict.fromkeys(filtered))[:strategy['max_items']]
-                    
-            return dict(elf_info)
+            if squashfs_file:
+                cmd = ['unsquashfs', '-ll', squashfs_file]
+                output = subprocess.check_output(cmd, text=True)
+                for line in output.splitlines():
+                    if rel_path in line:
+                        squashfs_perms = line.split()[0]
+                        return squashfs_perms if squashfs_perms.strip() else None
+            
+        return None
+                
+    except Exception as e:
+        logging.error(f"Error analyzing permissions: {e}")
+        return None
+
+def parse_file_selection(response_text: str) -> dict:
+    explorer_logger.info("-" * 50)
+    explorer_logger.info(f"[Parse] \n{response_text}\n")
+    explorer_logger.info("-" * 50)
+
+    MAX_FINDINGS = 50
+    findings = []
+    
+    json_pattern = re.compile(
+        r'\{\s*"reason"\s*:\s*"[^"]*"\s*,\s*"file"\s*:\s*"[^"]*"\s*\}',
+        re.DOTALL
+    )
+    matches = json_pattern.finditer(response_text)
+    
+    for match in matches:
+        if len(findings) >= MAX_FINDINGS:
+            explorer_logger.warning(f"[Parse] Exceeded maximum findings limit ({MAX_FINDINGS})")
+            break
+            
+        try:
+            json_str = match.group().strip()
+            if not (json_str.startswith('{') and json_str.endswith('}')):
+                continue
+                
+            result = json.loads(json_str)
+            
+            if not isinstance(result.get("reason"), str) or not isinstance(result.get("file"), str):
+                explorer_logger.warning(f"[Parse] Invalid field types in JSON: {json_str}")
+                continue
+                
+            if len(result["reason"]) > 2000 or len(result["file"]) > 255:
+                explorer_logger.warning(f"[Parse] Field length exceeds limit in JSON: {json_str}")
+                continue
+                
+            findings.append(result)
+            
+        except json.JSONDecodeError as e:
+            explorer_logger.error(f"[Parse] JSON parsing error: {e}")
+            continue
         except Exception as e:
-            logging.error(f"ELF analysis failed: {str(e)}")
-            return dict(elf_info)
-
-    def _extract_meaningful_strings(self, content: str, min_length: int = 8) -> List[str]:
-        base_strings = re.findall(fr'[\x20-\x7E]{{{min_length},}}', content)
-        entropy_filtered = [s for s in base_strings if self._calculate_entropy(s) > 2.5]
-        structure_patterns = [
-            r'^[A-Za-z0-9][A-Za-z0-9_.+-]*$',
-            r'^[A-Za-z]+(?:\s[A-Za-z]+)*$',
-            r'^v?\d+\.\d+',
-        ]
-        return [s for s in entropy_filtered if any(re.match(p, s) for p in structure_patterns)]
-
-    def _calculate_entropy(self, s: str) -> float:
-        freq = defaultdict(int)
-        for c in s:
-            freq[c] += 1
-        entropy, total = 0.0, len(s)
-        for count in freq.values():
-            p = count / total
-            entropy -= p * log2(p)
-        return entropy
-
-    def _is_version_like(self, s: str) -> bool:
-        return any(re.search(p, s) for p in VERSION_PATTERNS)
-
-    def _is_credential_like(self, s: str) -> bool:
-        return any(re.search(p, s) for p in SENSITIVE_PATTERNS.values())
-
-    def _is_config_like(self, s: str) -> bool:
-        config_patterns = [
-            r'^[A-Za-z_][A-Za-z0-9_]*=',
-            r'^\w+://',
-            r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?::\d+)?$'
-        ]
-        return any(re.match(p, s) for p in config_patterns)
-
-    def _is_compiler_info(self, s: str) -> bool:
-        compiler_keywords = {'GCC', 'clang', 'MSVC', 'build', 'optimize', 'version', 'target', 'configure'}
-        return any(kw in s for kw in compiler_keywords)
-
-    def full_analysis(self) -> Dict:
+            explorer_logger.error(f"[Parse] Unexpected error while parsing JSON: {e}")
+            continue
+    
+    if all(finding["file"] == "None" for finding in findings):
+        explorer_logger.info("[Parse] No files to analyze in current directory")
         return {
-            'file_info': {
-                'path': self.file_path,
-                'size': os.path.getsize(self.file_path),
-                'sha256': self._calculate_hash(),
-            },
-            'versions': self.extract_versions(),
-            'sensitive_info': self.analyze_sensitive_info(),
-            'elf_sections': self.analyze_elf_info()
+            "thought": findings,
+            "action": "next"
         }
 
-    def _calculate_hash(self) -> str:
+    valid_findings = [f for f in findings if f["file"] != "None"]
+    explorer_logger.info(f"[Parse] Found {len(valid_findings)} valid findings")
+    
+    return {
+        "thought": valid_findings,
+        "action": "analyze"
+    }
+    
+def parse_directory_selection(response_text: str) -> dict:
+    explorer_logger.debug(f"[Parser] Raw response: {response_text}")
+    
+    response_text = re.sub(r'```(?:json)?\s*|\s*```', '', response_text)
+    
+    json_pattern = re.compile(
+        r'\{[^{]*"Directory"\s*:\s*"[^"]*"[^{]*"Reasoning"\s*:\s*"[^"]*"[^{]*\}',
+        re.DOTALL
+    )
+    matches = json_pattern.finditer(response_text)
+    
+    valid_jsons = []
+    for match in matches:
         try:
-            result = subprocess.run(
-                ['sha256sum', self.file_path],
-                stdout=subprocess.PIPE,
-                timeout=PROCESS_TIMEOUT
-            )
-            return result.stdout.decode().split()[0]
+            json_str = match.group().strip()
+            
+            json_str = re.sub(r'\s+', ' ', json_str).strip()
+            
+            explorer_logger.debug(f"[Parser] Processed JSON string: {json_str}")
+            
+            data = json.loads(json_str)
+            
+            if not isinstance(data.get("Directory"), str) or not isinstance(data.get("Reasoning"), str):
+                explorer_logger.warning(f"[Parser] Invalid field types in JSON: {json_str}")
+                continue
+                
+            valid_jsons.append(data)
+            
+        except json.JSONDecodeError as e:
+            explorer_logger.error(f"[Parser] JSON parsing error: {e}")
+            continue
         except Exception as e:
-            logging.warning(f"Hash calculation failed: {str(e)}")
+            explorer_logger.error(f"[Parser] Unexpected error while parsing JSON: {e}")
+            continue
+    
+    if not valid_jsons:
+        explorer_logger.error("[Parser] No valid JSON objects found")
+        raise ValueError("No valid JSON objects found in response")
+        
+    result = valid_jsons[0]
+    explorer_logger.debug(f"[Parser] Successfully extracted JSON: {result}")
+    return result
+
+def parse_analysis_response(response_text: str) -> dict:
+    analyzer_logger.info("-" * 50)
+    analyzer_logger.info("Parsing response:")
+    analyzer_logger.debug(f"Raw input: {response_text[:200]}..." if len(response_text) > 200 else response_text)
+    
+    try:
+        if isinstance(response_text, dict):
+            data = response_text
+        else:
+            cleaned_text = re.sub(r'```(?:json)?\s*|\s*```', '', response_text)
+            
+            data = None
+            parse_methods = [
+                ('direct_json', lambda x: json.loads(x)),
+                ('preprocessed_json', lambda x: _preprocess_and_parse_json(x)),
+                ('python_dict', lambda x: _parse_python_dict(x))
+            ]
+            
+            for method_name, parse_func in parse_methods:
+                try:
+                    data = parse_func(cleaned_text)
+                    if data and _validate_data_structure(data):
+                        break
+                except Exception:
+                    continue
+            
+            if not data:
+                raise ValueError("Failed to parse response using all methods")
+
+        data = _normalize_data(data)
+        
+        _validate_data_fields(data)
+        
+        return data
+        
+    except Exception as e:
+        analyzer_logger.warning(f"Failed to parse response: {str(e)}")
+        raise ValueError(f"Failed to parse response: {str(e)}")
+
+def _preprocess_and_parse_json(text: str) -> dict:
+    try:
+        text = re.sub(r'```(?:json)?\s*|\s*```', '', text)
+        
+        from collections import OrderedDict
+        return json.loads(text, object_pairs_hook=OrderedDict)
+            
+    except Exception as e:
+        analyzer_logger.warning(f"Preprocessing failed: {str(e)}")
+        analyzer_logger.warning(f"Original text:\n{text}")
+        raise
+
+def _parse_python_dict(text: str) -> dict:
+    import ast
+    text = text.strip()
+    if not (text.startswith('{') and text.endswith('}')):
+        raise ValueError("Not a valid Python dictionary string")
+    
+    text = text.replace('True', 'True')\
+               .replace('False', 'False')\
+               .replace('None', 'None')
+    
+    return ast.literal_eval(text)
+
+def _normalize_data(data: dict) -> dict:
+    def normalize_value(value):
+        if value is None:
             return ""
+        if isinstance(value, bool):
+            return str(value).lower()
+        if isinstance(value, (int, float)):
+            return value
+        return str(value)
+    
+    def normalize_dict(d):
+        if not isinstance(d, dict):
+            return normalize_value(d)
+        return {
+            key: normalize_dict(value) if isinstance(value, dict) else normalize_value(value)
+            for key, value in d.items()
+        }
+    
+    return normalize_dict(data)
+
+def _validate_data_structure(data: dict) -> bool:
+    return isinstance(data, dict) and all(
+        key in data for key in ['thought', 'command', 'status']
+    )
+
+def _validate_data_fields(data: dict) -> None:
+    required_fields = {
+        'thought': dict,
+        'command': str,
+        'status': lambda x: x in ['continue', 'complete']
+    }
+    
+    for field, validation in required_fields.items():
+        if field not in data:
+            raise ValueError(f"Missing required field: {field}")
+        
+        if callable(validation):
+            if not validation(data[field]):
+                raise ValueError(f"Invalid value for field: {field}")
+        elif not isinstance(data[field], validation):
+            raise ValueError(f"Invalid type for field: {field}")
+    
+    thought_fields = {
+        'findings': str,
+        'severity': (int, float, str),
+        'reason': str,
+        'next_step': str
+    }
+    
+    for field, field_type in thought_fields.items():
+        if field not in data['thought']:
+            raise ValueError(f"Missing required thought field: {field}")
+        
+        if not isinstance(data['thought'][field], field_type if isinstance(field_type, type) else field_type[0:][0]):
+            if field == 'severity' and isinstance(data['thought'][field], str):
+                try:
+                    float_val = float(data['thought'][field])
+                    data['thought'][field] = float_val
+                    continue
+                except ValueError:
+                    pass
+            raise ValueError(f"Invalid type for thought field: {field}")
+
+def parse_directory_removal(response_text: str) -> dict:
+    explorer_logger.debug(f"[Parser] Raw response: {response_text}")
+    
+    try:
+        json_str = response_text.strip()
+        json_str = re.sub(r'\r\n|\r|\n', '\n', json_str)
+        
+        json_str = re.sub(r'^```\s*(?:json)?\s*\n?|```\s*$', '', json_str, flags=re.MULTILINE)
+        
+        json_str = '\n'.join(line.strip() for line in json_str.split('\n'))
+        
+        json_pattern = re.compile(r'\{.*\}', re.DOTALL)
+        match = json_pattern.search(json_str)
+        if not match:
+            raise ValueError("No JSON object found")
+            
+        json_str = match.group()
+        
+        json_str = re.sub(r'([{,]\s*)(\w+)(\s*:)', r'\1"\2"\3', json_str)
+        
+        json_str = re.sub(r"'([^']*)'", r'"\1"', json_str)
+        
+        json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+        
+        explorer_logger.debug(f"[Parser] Preprocessed JSON: {json_str}")
+        
+        data = json.loads(json_str)
+        
+        findings = []
+        if "findings" in data and isinstance(data["findings"], list):
+            for finding in data["findings"]:
+                if isinstance(finding, dict) and "issue" in finding and "reason" in finding:
+                    findings.append({
+                        "issue": str(finding["issue"]),
+                        "reason": finding["reason"] if isinstance(finding["reason"], list) 
+                                else str(finding["reason"])
+                    })
+        
+        exclude = []
+        if "exclude" in data and isinstance(data["exclude"], list):
+            exclude = [str(d) for d in data["exclude"] if isinstance(d, (str, int))]
+        
+        result = {
+            "findings": findings,
+            "exclude": exclude
+        }
+        
+        explorer_logger.debug(f"[Parser] Successfully parsed: {result}")
+        return result
+        
+    except json.JSONDecodeError as e:
+        explorer_logger.error(f"[Parser] JSON decode error: {e}")
+        return {"findings": [], "exclude": []}
+    except ValueError as e:
+        explorer_logger.error(f"[Parser] Value error: {e}")
+        return {"findings": [], "exclude": []}
+    except Exception as e:
+        explorer_logger.error(f"[Parser] Unexpected error: {e}")
+        return {"findings": [], "exclude": []}
