@@ -46,7 +46,7 @@ def load_prompts(vendor: str):
     """Load prompts from YAML file"""
     logger = logging.getLogger('Crawler')
     # 修改为从prompts目录加载
-    system_prompt_path = os.path.join(prompt_dir, "prompts", "prompts.yaml")
+    system_prompt_path = os.path.join(prompt_dir, "prompts", "base.yaml")
     user_prompt_path = os.path.join(prompt_dir, "prompts", f"{vendor}.yaml")
     logger.info(f"Loading prompts from: {system_prompt_path} and {user_prompt_path}")
     
