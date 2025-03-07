@@ -140,6 +140,17 @@ def annotate(state: AgentState) -> AgentState:
         
         explorer_logger.info(f"[Annotate] Total files found: {len(dir_desc['file_descriptions'])}")
         
+        if len(dir_desc['file_descriptions']) == 0:
+            explorer_logger.info(f"[Annotate] Empty directory detected, marking as processed")
+            return {
+                **state,
+                "dir_data": {
+                    "files": [],
+                    "index": -1,  
+                    "dir_path": current_dir
+                }
+            }
+        
         return {
             **state,
             "dir_data": {
