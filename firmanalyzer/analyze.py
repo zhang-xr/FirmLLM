@@ -91,7 +91,7 @@ def format_file_description(state):
                 r2_detector = R2VersionDetector()
                 version_info = r2_detector.detect_version(file_path)
                 if version_info:
-                    file_info.append("\n[Potential Version Detection From R2(Need to be verified)]")
+                    file_info.append("\n[Potential Version Strings From R2]")
                     for v_info in version_info[:5]:  # Show top 5 most reliable results
                         file_info.append(
                             f"- {v_info['version']} "
@@ -106,13 +106,13 @@ def format_file_description(state):
                 
                 # Version information (backwards compatible)
                 if bin_report.get('versions'):
-                    file_info.append("\n[Potential Embedded Version Strings(Need to be verified)]")
+                    file_info.append("\n[Potential Embedded Version Strings(Need to be identified)]")
                     for ver in bin_report['versions'][:20]:
                         file_info.append(f"- {ver}")
                 
                 # ELF section analysis
                 if bin_report.get('elf_sections'):
-                    file_info.append("\n[ELF Structure Analysis(Need to be verified)]")
+                    file_info.append("\n[ELF Structure Analysis(Need to be identified)]")
                     for section, content in bin_report['elf_sections'].items():
                         file_info.append(f"- {section}: {len(content)} valid strings")
                         
@@ -121,7 +121,7 @@ def format_file_description(state):
 
         # Unified sensitive information display (all file types)
         if sensitive_results:
-            file_info.append("\n[Potential Sensitive Content Detection(Need to be verified)]")
+            file_info.append("\n[Potential Sensitive Content Detection(Need to be identified)]")
             for category, items in sensitive_results.items():
                 if items:
                     file_info.append(f"\n{category.upper()} ({len(items)} found):")
@@ -270,13 +270,16 @@ def vulnsearch(query: str, save_path: str) -> str:
     """Execute vulnerability search and return results"""
     try:
         analysis_logger.info(f"[VulnSearch] Starting vulnerability search for: {query}")
+        
+        # 使用新的查询函数
         results = query_nvd_and_mitre(query, save_path=save_path)
-
+        
+        # 提取分析结果并转换为字符串
         if results and "analyzed_results" in results:
             return results["analyzed_results"]
         else:
             return "No vulnerabilities found or analysis failed"
-
+            
     except Exception as e:
         analysis_logger.error(f"[VulnSearch] Vulnerability search error: {str(e)}")
         return f"Error performing vulnerability search: {str(e)}"
@@ -374,13 +377,13 @@ def disassembly(state: FAgentState) -> str:
         
         # Define available dangerous functions
         dangerous_functions = {
-            "system", "popen",           
-            "strcpy", "strcat", "gets", 
-            "sprintf", "snprintf", "sscanf",
-            "memcpy",                 
-            "fprintf",                
-            "setuid",                    
-            "recv"                       
+            "system", "popen",           # 命令注入
+            "strcpy", "strcat", "gets",  # 缓冲区溢出
+            "sprintf", "snprintf", "sscanf",  # 格式化字符串/缓冲区
+            "memcpy",                    # 内存损坏
+            "fprintf",                   # 格式化字符串
+            "setuid",                    # 权限提升
+            "recv"                       # 网络输入
         }
         
         # Prepare prompt for LLM to analyze history
@@ -482,10 +485,10 @@ Note: Only select functions from the provided list above. Do not include any oth
                 analyzer = R2Analyzer(
                     file_path, 
                     state['save_path'],
-                    max_analysis_count=20,
+                    max_analysis_count=4,
                     timeout_seconds=1800,
                     command_timeout=90,
-                    max_iterations=8,
+                    max_iterations=6,
                     target_functions=target_funcs # Pass target functions to analyzer
                 )
                 result = analyzer.analyze_binary()
@@ -501,7 +504,7 @@ Note: Only select functions from the provided list above. Do not include any oth
         p.start()
         
         # Wait for 15 minutes
-        p.join(timeout=900)
+        p.join(timeout=1800)
         
         if p.is_alive():
             p.terminate()
@@ -769,6 +772,10 @@ def analyzer(state: FAgentState, graph, max_steps=30):
                 analysis_logger.error(f"\n❌ [Save] Failed: {str(e)}")
     
     return final_thought
+
+
+
+
 
 
 

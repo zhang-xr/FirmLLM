@@ -8,6 +8,7 @@ from pathlib import Path
 from explore import explorer
 import argparse
 from LogManage import LogManager
+import configparser
 
 
 def find_firmware_root(start_path, required_dirs=None, file_patterns=None, min_score=12):
@@ -110,8 +111,13 @@ def extract_firmware_with_binwalk(firmware_path: str, extract_path: str) -> str:
             
         os.makedirs(firmware_extract_path, exist_ok=True)
         
-        # Use the specified binwalk path
-        binwalk_path = "/usr/local/rust-binwalk/binwalk-rust"
+        # 从配置文件读取 binwalk 路径
+        config = configparser.ConfigParser()
+        config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+        config.read(config_path)
+        
+        # 如果配置文件中有 BinwalkPath 就使用配置的路径，否则使用默认的 'binwalk'
+        binwalk_path = config.get('Settings', 'RustBinwalkPath', fallback='binwalk')
         
         # Run binwalk extraction
         cmd = f"'{binwalk_path}' -Me '{firmware_path}' --directory '{firmware_extract_path}'"

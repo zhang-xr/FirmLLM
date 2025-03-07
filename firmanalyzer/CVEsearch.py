@@ -1,17 +1,18 @@
-import os
+import os 
 import re
 import requests
 import json
 import time
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup  # Add BeautifulSoup for parsing HTML
 from typing import List, Dict, Any
 from client import create_openai_client
 
 def parse_openai_response(response_text: str) -> List[Dict[str, str]]:
     """
-    Extract and validate JSON data from LLM response
-    Return structure example: [{"cve_id": "CVE-XXXX-XXXX", "description": "..."}]
+    从LLM响应中提取并验证JSON数据
+    返回结构示例：[{"cve_id": "CVE-XXXX-XXXX", "description": "..."}]
     """
+    # 匹配JSON数组模式（支持多行）
     json_pattern = r'\[\s*\{.*?\}\s*\]'
     matches = re.finditer(json_pattern, response_text, re.DOTALL)
     
@@ -19,16 +20,20 @@ def parse_openai_response(response_text: str) -> List[Dict[str, str]]:
     
     for match in matches:
         try:
+            # 尝试解析JSON
             json_str = match.group()
             parsed = json.loads(json_str)
             
+            # 验证数据结构
             if isinstance(parsed, list):
                 for entry in parsed:
                     if all(key in entry for key in ('cve_id', 'description')):
+                        # 基础字段验证
                         valid_entry = {
                             'cve_id': str(entry['cve_id']).strip(),
                             'description': str(entry['description']).strip()
                         }
+                        # 可选添加额外验证（如CVE ID格式）
                         if valid_entry['cve_id'].startswith('CVE-'):
                             valid_entries.append(valid_entry)
                         else:
@@ -37,13 +42,12 @@ def parse_openai_response(response_text: str) -> List[Dict[str, str]]:
                 print(f"Expected JSON array, got {type(parsed)}")
                 
         except json.JSONDecodeError as e:
-            print(f"JSON parsing failed: {str(e)}")
+            print(f"JSON解析失败: {str(e)}")
             print(f"Problematic JSON: {json_str}")
             
     return valid_entries
-
 def parse_component_and_version(component: str) -> tuple:
-    """Use regex to match version number"""
+    """使用正则表达式匹配版本号"""
     version_pattern = r"\b(v?\d+\.\d+[\w.]*)\b"
     match = re.search(version_pattern, component)
     if match:
@@ -57,21 +61,24 @@ def parse_mitre_html(html_content, component_name, version):
     soup = BeautifulSoup(html_content, 'html.parser')
     cve_items = []
     
+    # Find tables (not dependent on specific ID)
     tables = soup.find_all('table')
     
     for table in tables:
         rows = table.find_all('tr')
         for row in rows:
             cells = row.find_all('td')
-            if len(cells) >= 2:
+            if len(cells) >= 2:  # Ensure at least two columns
                 cve_cell = cells[0]
                 desc_cell = cells[1]
                 
+                # Find CVE ID
                 cve_link = cve_cell.find('a')
                 if cve_link and 'CVE-' in cve_link.text:
                     cve_id = cve_link.text.strip()
                     desc_text = desc_cell.text.strip()
                     
+                    # Check if description contains component name (case insensitive)
                     if component_name.lower() in desc_text.lower():
                         cve_item = {
                             'cve_id': cve_id,
@@ -85,17 +92,21 @@ def parse_mitre_html(html_content, component_name, version):
 
 def analyze_cve_with_openai(component_name: str, version: str, search_results: Dict[str, Any]) -> List[str]:
     """Analyze CVE results using OpenAI, supporting batch processing"""
+    # Extract all CVE entries from search results
     all_cves = []
     if search_results.get("mitre"):
         all_cves.extend(search_results["mitre"])
     
+    # Batch size
     BATCH_SIZE = 15
     analyzed_results = []
     
+    # Process CVEs in batches
     for i in range(0, len(all_cves), BATCH_SIZE):
         batch = all_cves[i:i + BATCH_SIZE]
         batch_num = i//BATCH_SIZE + 1
         
+        # Prepare prompt
         prompt = f"""
 Target Component: {component_name}{version}
 
@@ -120,6 +131,7 @@ Please return all matching CVEs in JSON format, otherwise return an empty list. 
 """
         print(prompt)
         try:
+            # Call OpenAI API
             model,client = create_openai_client()
             response = client.chat.completions.create(
                 model=model,
@@ -129,7 +141,7 @@ Please return all matching CVEs in JSON format, otherwise return an empty list. 
                 ],
                 temperature=0
             )
-            
+            # Get response text
             if response.choices and response.choices[0].message:
                 result_text = response.choices[0].message.content
                 print(f"\n=== Batch {batch_num} Analysis Results ===")
@@ -138,6 +150,7 @@ Please return all matching CVEs in JSON format, otherwise return an empty list. 
                 print(parsed_data)
                 print(f"Analyzed {len(analyzed_results) * BATCH_SIZE}/{len(all_cves)} CVEs")
             
+            # Add delay to avoid rate limits
             time.sleep(1)
             
         except Exception as e:
@@ -145,7 +158,7 @@ Please return all matching CVEs in JSON format, otherwise return an empty list. 
             continue
     
     print("\n=== Merging Analysis Results ===")
-    print(json.dumps(analyzed_results, indent=2, ensure_ascii=False))
+    print(json.dumps(analyzed_results, indent=2, ensure_ascii=False))  # 修改这里
     
     return analyzed_results
 
@@ -155,6 +168,7 @@ def query_nvd_and_mitre(component: str, save_path: str = None):
     :param component: Component name, e.g. "BusyBox 1.01" or "BusyBox v1.01" 
     :param save_path: Optional path to save results to JSON file
     """
+    # Parse component name and version
     component_name, version = parse_component_and_version(component)
     
     try:
@@ -172,13 +186,16 @@ def query_nvd_and_mitre(component: str, save_path: str = None):
         print(f"MITRE query error: {e}")
         mitre_results = None
 
+    # Integrate results
     results = {
         "mitre": mitre_results,
         "component": component_name,
         "version": version
     }
 
+    # Sort and limit results before analysis
     if results["mitre"]:
+        # Sort CVEs by ID in descending order (newest first)
         sorted_cves = sorted(results["mitre"], 
                            key=lambda x: x['cve_id'], 
                            reverse=True)
@@ -186,8 +203,10 @@ def query_nvd_and_mitre(component: str, save_path: str = None):
         results["mitre"] = sorted_cves[:100]
         print(f"Limited to newest 100 CVEs from {len(sorted_cves)} total CVEs")
 
+    # Analyze results using OpenAI
     analyzed_results = analyze_cve_with_openai(component_name, version, results)
     
+    # Save results if save_path provided
     if save_path:
         try:
             os.makedirs(save_path, exist_ok=True)
@@ -224,6 +243,6 @@ if __name__ == "__main__":
         print(f"\n=== Querying component: {component} ===")
         results = query_nvd_and_mitre(component,"./cve_results")
         all_results[component] = results
-        time.sleep(1)
+        time.sleep(1)  # Add brief delay
     
     print("\nQuery complete")
