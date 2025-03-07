@@ -146,7 +146,7 @@ def annotate(state: AgentState) -> AgentState:
                 **state,
                 "dir_data": {
                     "files": [],
-                    "index": -1,  
+                    "index": -1,  # 设置为-1表示目录已处理完毕
                     "dir_path": current_dir
                 }
             }
