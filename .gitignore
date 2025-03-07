@@ -1,4 +1,5 @@
 *.ini
 __pycache__/
 *.py[cod]
-*$py.classfirmanalyzer/result/
+*$py.class
+firmanalyzer/result/
