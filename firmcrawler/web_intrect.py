@@ -145,36 +145,8 @@ async def click(state: AgentState) -> str:
         return f"Error: Failed to click element [{bbox_id}]. Please try a different element or action."
 
 
-async def type_text(state: AgentState):
-    page = state["page"]
-    type_args = state["response"]["args"]
-    
-    if type_args is None or len(type_args) != 2:
-        return "Error: Invalid type action. Required format: Type [Numerical_Label]; [Content]"
-    
-    try:
-        bbox_id = int(type_args[0])
-    except (ValueError, TypeError):
-        return f"Error: Invalid element ID '{type_args[0]}'. Must be a numerical label."
-        
-    try:
-        bbox = state["bboxes"][bbox_id]
-    except (IndexError, KeyError):
-        return f"Error: Element with numerical label {bbox_id} not found on current page."
-    
-    text_content = type_args[1]
-    x, y = bbox["x"], bbox["y"]
-    
-    try:
-        await page.mouse.click(x, y)
-        await page.keyboard.press("Control+A" if platform.system() != "Darwin" else "Meta+A")   
-        await page.keyboard.press("Backspace")
-        await page.keyboard.type(text_content)
-        await page.keyboard.press("Enter")
-        return f"Successfully typed '{text_content}' into element [{bbox_id}] and pressed Enter"
-    except Exception as e:
-        return f"Error: Failed to type text. Please verify the element is a text input field."
-
+async def retry(state: AgentState):
+    return f"Error: Invalid response format"
 
 async def scroll(state: AgentState):
     page = state["page"]
@@ -293,119 +265,6 @@ async def go_back(state: AgentState):
     except Exception as e:
         return "Error: Failed to go back. Please try a different action."
 
-
-async def to_google(state: AgentState):
-    page = state["page"]
-    try:
-        await page.goto("https://www.google.com/")
-        return "Successfully navigated to Google homepage."
-    except Exception as e:
-        return "Error: Failed to navigate to Google. Please check your internet connection."
-
-
-async def get_current_url(state: AgentState):
-    import json
-    page = state["page"]
-    try:
-        current_url = page.url
-        title = await page.title()
-        
-        page_info = {
-            "title": title,
-            "url": current_url,
-        }
-        save_path = os.path.join(state["collected"], f"page_info.jsonl")
-        try:
-            with open(save_path, "a", encoding="utf-8") as f:
-                json.dump(page_info, f, ensure_ascii=False)
-                f.write("\n")
-        except Exception as e:
-            print(f"Error writing to JSONL file: {str(e)}")
-            
-        return f"Current URL is {current_url}."
-    except Exception as e:
-        return f"Failed to retrieve current URL due to: {str(e)}"
-
-
-async def prettify_text(text: str, limit: Optional[int] = None) -> str:
-    text = re.sub(r"\s+", " ", text).strip()
-    text = unidecode.unidecode(text)
-    if limit:
-        text = text[:limit]
-    return text
-
-
-async def find_parent_element_text(element, prettify: bool = True) -> str:
-    parent_element_text = (await element.text_content()).strip()
-    if parent_element_text:
-        return await prettify_text(parent_element_text) if prettify else parent_element_text
-
-    parents = await element.query_selector_all("xpath=./ancestor::*[position() <= 3]")
-    for parent in parents:
-        parent_text = (await parent.text_content()).strip()
-        if parent_text:
-            return await prettify_text(parent_text) if prettify else parent_text
-    return ""
-
-
-async def extract_firmware_link_elements(page) -> List[Dict[str, Any]]:
-    firmware_extensions = [
-        '.bin', '.fw', '.hex', '.rom', '.img', '.elf', '.fwu',
-        '.firmware', '.update', '.upgrade', '.zip', '.rar', '.7z',
-        '.tar', '.gz', '.bz2', '.xz'
-    ]
-    
-    link_data = []
-    link_elements = await page.query_selector_all('a[href]')
-    for element in link_elements:
-        href = await element.get_attribute("href")
-        if not validators.url(href):
-            continue
-            
-        is_firmware = any(href.lower().endswith(ext) for ext in firmware_extensions)
-        if not is_firmware:
-            continue
-            
-        link_text = await find_parent_element_text(element)
-        link_text = await prettify_text(link_text, 50)
-
-        if link_text and await element.is_visible() and await element.is_enabled():
-            link_data.append({
-                'element_id': await element.get_attribute('id'),
-                'description': link_text,
-                'element_type': 'firmware_link',
-                'url': href
-            })
-
-    return link_data
-
-async def extract_firmware_links(state: AgentState) -> str:
-
-    page = state["page"]
-    link_data = await extract_firmware_link_elements(page)
-    if not link_data:
-        return "No firmware-related download links found."
-    
-    links_description = '\n'.join(
-        [', '.join(
-            [f"{k}: {v}" for k, v in link.items() if v]
-        ).strip(', ')
-        for link in link_data]
-    )
-    save_path = os.path.join(state["collected"], f"firmware_links.jsonl")
-    try:
-        with open(save_path, "a", encoding="utf-8") as f:
-            for link in link_data:
-                link_with_source = link.copy()
-                link_with_source["source_page"] = page.url
-                filtered_link = {k: v for k, v in link_with_source.items() if v}
-                if filtered_link:  
-                    json.dump(filtered_link, f, ensure_ascii=False)
-                    f.write("\n")
-    except Exception as e:
-        print(f"Error writing to JSONL file: {str(e)}")
-    
-    return f"Found the following firmware-related links:\n" + links_description
 
 async def copy_link_address(state: AgentState):
     page = state["page"]

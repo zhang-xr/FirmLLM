@@ -21,7 +21,7 @@ from langchain_core.prompts.image import ImagePromptTemplate
 from langchain_core.runnables import chain as chain_decorator
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
-from web_intrect import AgentState, click, scroll, wait, go_back, get_navigation_links, get_download_links
+from web_intrect import AgentState, click, scroll, wait, go_back, get_navigation_links, get_download_links, retry
 from functools import partial
 from callback import TokenUsageCallbackHandler
 import asyncio
@@ -443,9 +443,6 @@ def update_scratchpad(state: dict, retain_human_messages: int = 0, max_messages:
     console.print(f"\nCurrent URL: {state['page'].url}", style="bold blue")
 
     return {**state, "scratchpad": message}
-
-async def retry(state: AgentState):
-    return f"Error: Invalid response format"
 
 def build_graph(system_prompt, retain_human_messages=0, max_messages=10, save_path= None):
     agent = create_agent(system_prompt, save_path)
