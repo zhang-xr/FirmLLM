@@ -3,7 +3,7 @@ import re
 import json
 import logging
 import subprocess
-from firmanalyzer.LogManage import LogManager
+from LogManage import LogManager
 
 explorer_logger = LogManager.get_logger('Explorer')
 analyzer_logger = LogManager.get_logger('Analyzer')
