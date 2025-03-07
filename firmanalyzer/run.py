@@ -5,9 +5,9 @@ import glob
 import logging
 import subprocess
 from pathlib import Path
-from firmanalyzer.explore import explorer
+from explore import explorer
 import argparse
-from firmanalyzer.LogManage import LogManager
+from LogManage import LogManager
 
 
 def find_firmware_root(start_path, required_dirs=None, file_patterns=None, min_score=12):
@@ -283,6 +283,29 @@ def analyze_firmware_content(firmware_dir: str, save_path: str, binwalk_report: 
     
     return security_report
 
+def main(firmware_path, save_path):
+    """
+    直接使用传入的参数分析固件
+    
+    Args:
+        firmware_path: 固件文件或已提取固件目录的路径
+        save_path: 保存分析结果的路径
+        
+    Returns:
+        security_report: 分析报告
+    """
+    try:
+        # Process firmware and get security report
+        security_report = process_firmware(firmware_path, save_path)
+        
+        print(f"\nAnalysis complete. Results saved to: {save_path}")
+        
+        return security_report
+        
+    except Exception as e:
+        print(f"Error during firmware analysis: {str(e)}")
+        raise
+
 if __name__ == "__main__":
     # Create argument parser
     parser = argparse.ArgumentParser(description='Firmware Analysis Tool')
@@ -290,3 +313,5 @@ if __name__ == "__main__":
     parser.add_argument('save_path', help='Path to save analysis results')
     
     args = parser.parse_args()
+    
+    main(args.firmware_path, args.save_path)
