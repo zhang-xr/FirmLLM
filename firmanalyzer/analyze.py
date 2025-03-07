@@ -17,6 +17,7 @@ from langchain.prompts.chat import (
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
 from disassembly import R2Analyzer
+from R2decetor import R2VersionDetector
 from securityscan import SecurityScanner
 from CVEsearch import query_nvd_and_mitre
 from llm_config import LLMClient
