@@ -11,23 +11,34 @@ import logging
 from collections import defaultdict
 import queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from client import create_openai_client
+from firmanalyzer.client import create_openai_client
 from typing import List, Optional
+import sys
 
 class ThreadLogCollector:
+    """Thread-safe log collector"""
     def __init__(self):
         self.logs = defaultdict(list)
         self.lock = threading.Lock()
     
     def add_log(self, thread_id: int, message: str):
+        """Add a log message for a specific thread"""
         with self.lock:
             self.logs[thread_id].append(message)
     
     def get_logs(self, thread_id: int) -> List[str]:
+        """Get all logs for a specific thread"""
         with self.lock:
             return self.logs.pop(thread_id, [])
 
 def get_logger(name, save_path=None, log_collector=None):
+    """Get a logger with thread-specific log collection
+    
+    Args:
+        name: Logger name
+        save_path: Optional path to save log file
+        log_collector: ThreadLogCollector instance
+    """
     logger = logging.getLogger(name)
     logger.handlers = []
     logger.setLevel(logging.INFO)
@@ -39,8 +50,7 @@ def get_logger(name, save_path=None, log_collector=None):
                 message = self.format(record)
                 log_collector.add_log(thread_id, message)
     
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s',
-                                datefmt='%H:%M:%S')
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     
     collector_handler = CollectorHandler()
     collector_handler.setFormatter(formatter)
@@ -92,7 +102,20 @@ class R2Analyzer(cmd.Cmd):
                  max_iterations: int = 10,
                  find_dangerous_timeout: int = 900,
                  target_functions: List[str] = None):
+        """Initialize R2 analyzer
+        
+        Args:
+            binary_path: Binary file path
+            save_path: Result save path
+            max_analysis_count: Max number of call chains to analyze
+            timeout_seconds: Overall analysis timeout (seconds)
+            command_timeout: Single command timeout (seconds)
+            max_iterations: Max LLM interaction iterations
+            find_dangerous_timeout: Timeout for finding dangerous functions (seconds)
+            target_functions: List of function names to prioritize in analysis
+        """
         super().__init__()
+        # Create logger instance
         self.log_collector = ThreadLogCollector()
         self.disassembly_logger = get_logger('R2', save_path, self.log_collector)
         self.disassembly_logger.info(f"[Init] Initializing: {binary_path}")
@@ -100,17 +123,20 @@ class R2Analyzer(cmd.Cmd):
         self.r2 = r2pipe.open(binary_path, flags=['-e', 'io.cache=true'])
         self.save_path = save_path
         
+        # Config parameters
         self.MAX_ANALYSIS_COUNT = max_analysis_count
         self.TIMEOUT_SECONDS = timeout_seconds
         self.COMMAND_TIMEOUT = command_timeout
         self.MAX_ITERATIONS = max_iterations
         self.FIND_DANGEROUS_TIMEOUT = find_dangerous_timeout
         
+        # R2 configuration
         self.r2.cmd('e anal.hasnext=true')    
         self.r2.cmd('e anal.depth=256')       
         self.r2.cmd('e io.va=true')           
         self.r2.cmd('aaa')                    
         
+        # Get binary info
         info = self.r2.cmdj('ij')
         if not info:
             self.disassembly_logger.error("[Init] Failed to load binary file")
@@ -118,13 +144,16 @@ class R2Analyzer(cmd.Cmd):
             
         self.disassembly_logger.info(f"[Init] Successfully loaded file: {info.get('core', {}).get('file', 'unknown')}")
         
+        # Get base address
         self.base_addr = info.get('bin', {}).get('baddr', 0)
         self.disassembly_logger.info(f"[Init] Binary base address: 0x{self.base_addr:x}")
 
+        # Analyze import table
         self.r2.cmd('aff')  
         self.r2.cmd('afr')  
         self.r2.cmd('af@@f')
         
+        # Verify function analysis
         functions = self.r2.cmdj('aflj')
         if not functions:
             self.disassembly_logger.warning("[Init] No functions detected, attempting deeper analysis")
@@ -133,51 +162,85 @@ class R2Analyzer(cmd.Cmd):
         
         self.disassembly_logger.info(f"[Init] Detected {len(functions) if functions else 0} functions")
         
+        # Initialize LLM client
         self.model, self.client = create_openai_client()
         if self.model == "deepseek-reasoner":
             self.client.base_url = "https://api.deepseek.com/beta"
         
+        # Initialize dangerous functions dictionary
         self.dangerous_functions = {
+            # Command Injection (Critical, weight 30)
             "system": {"weight": 30, "category": "command_injection", "description": "Direct command execution, CVE-2016-1555/CVE-2018-1328"},
             "popen": {"weight": 30, "category": "command_injection", "description": "Command execution with pipe, CVE-2017-7859"},
+            
+            # Buffer Overflow (High, weight 25)
             "strcpy": {"weight": 25, "category": "buffer_overflow", "description": "Unbounded string copy, CVE-2020-10562"},
             "strcat": {"weight": 25, "category": "buffer_overflow", "description": "Unbounded string concatenation, CVE-2019-1573"},
             "gets": {"weight": 25, "category": "buffer_overflow", "description": "Dangerous input function, CVE-2016-2563"},
             "sprintf": {"weight": 25, "category": "buffer_overflow", "description": "Buffer overflow in string formatting, CVE-2020-8597"},
             "sscanf": {"weight": 25, "category": "buffer_overflow", "description": "String parsing overflow, CVE-2012-2393"},
+            
+            # Memory Corruption (High, weight 25) 
             "memcpy": {"weight": 25, "category": "memory", "description": "Memory copy without bounds check, CVE-2019-8936"},
+            
+            # Format String (High, weight 25)
             "fprintf": {"weight": 25, "category": "format_string", "description": "File output format string, CVE-2019-14685"},
             "printf": {"weight": 25, "category": "format_string", "description": "File output format string, CVE-2019-14685"},
+            
+            # Privilege Escalation (High, weight 25)
             "setuid": {"weight": 25, "category": "privilege", "description": "Privilege change, CVE-2019-11043"},
+            
+            # Network Input (Medium, weight 20)
             "recv": {"weight": 25, "category": "network", "description": "Network input handling, CVE-2020-8597"}
         }
         
+        # Initialize conversation history
         self.message_history = []
         self._init_conversation()
         
+        # Initialize caches and locks
         self.call_chain_cache = {}
         self.cache_lock = threading.Lock()
         self.r2_lock = threading.Lock()
 
+        # Set result length limit
         self.MAX_RESULT_LENGTH = min(
             int(os.getenv('MAX_RESULT_LENGTH', 20000)),
-            64000
+            64000  # Hard limit 64k
         )
 
+        # Store target functions
         self.target_functions = set(target_functions) if target_functions else set()
         if self.target_functions:
             self.disassembly_logger.info(f"[Init] Prioritizing analysis of functions: {self.target_functions}")
 
-    @timeout_decorator(300)
+    @timeout_decorator(1800)
     def find_dangerous_functions(self):
+        """Find dangerous function calls in the binary and their complete call chains
+        
+        Returns:
+            list: List of dictionaries containing dangerous function references with format:
+            [{
+                'function': caller_function_name,
+                'address': caller_function_address,
+                'dangerous_calls': [{
+                    'function': dangerous_function_name,
+                    'address': dangerous_function_address,
+                    'call_offset': call_location_address
+                }]
+            }]
+        """
         self.disassembly_logger.info("[Find] Starting dangerous function search")
         try:
+            # 使用嵌套字典存储，第一个键是函数名，第二个键是调用地址
             found_refs = {}
             
+            # Get all functions, imports and symbols
             imports = self.r2.cmdj('iij') or []
             symbols = self.r2.cmdj('isj') or []
             functions = self.r2.cmdj('aflj') or []
             
+            # Create address mapping for dangerous functions
             for item in imports + symbols + functions:
                 name = item.get('name', '').lower()
                 addr = item.get('vaddr', item.get('offset', 0))
@@ -185,9 +248,11 @@ class R2Analyzer(cmd.Cmd):
                 if not addr or not name:
                     continue
                     
+                # Clean and normalize function name
                 clean_name = re.sub(r'^[_@.]', '', name.split('.')[-1])
                 base_name = clean_name.split('_')[0]
                 
+                # Check for dangerous function matches
                 for func_name in self.dangerous_functions:
                     if (func_name in clean_name or 
                         func_name == base_name or 
@@ -204,10 +269,12 @@ class R2Analyzer(cmd.Cmd):
                                 'xrefs': []
                             }
                             
+                            # Get cross references
                             xrefs = self.r2.cmdj(f'axtj @ {addr}') or []
                             for xref in xrefs:
                                 ref_addr = xref.get('from', 0)
                                 if ref_addr:
+                                    # Get caller function info
                                     caller_func = self.r2.cmdj(f'afij @ {ref_addr}')
                                     if caller_func and caller_func[0]:
                                         found_refs[func_name][addr]['xrefs'].append({
@@ -216,6 +283,7 @@ class R2Analyzer(cmd.Cmd):
                                             'call_offset': ref_addr
                                         })
 
+            # Search for string references to dangerous functions
             strings = self.r2.cmdj('izj') or []
             for string in strings:
                 str_value = string.get('string', '').lower()
@@ -226,10 +294,12 @@ class R2Analyzer(cmd.Cmd):
                     
                 for func_name in self.dangerous_functions:
                     if func_name in str_value:
+                        # Get cross references to the string
                         xrefs = self.r2.cmdj(f'axtj @ {str_addr}') or []
                         for xref in xrefs:
                             ref_addr = xref.get('from', 0)
                             if ref_addr:
+                                # Get caller function info
                                 caller_func = self.r2.cmdj(f'afij @ {ref_addr}')
                                 if caller_func and caller_func[0]:
                                     if func_name not in found_refs:
@@ -249,10 +319,12 @@ class R2Analyzer(cmd.Cmd):
                                         'call_offset': ref_addr
                                     })
 
+            # Format results
             results = []
             for func_refs in found_refs.values():
                 for ref in func_refs.values():
                     for xref in ref['xrefs']:
+                        # Find or create caller entry
                         caller_entry = next(
                             (r for r in results if r['address'] == xref['caller_addr']),
                             None
@@ -266,6 +338,7 @@ class R2Analyzer(cmd.Cmd):
                             }
                             results.append(caller_entry)
                         
+                        # Add dangerous call info
                         caller_entry['dangerous_calls'].append({
                             'function': ref['function'],
                             'address': ref['address'],
@@ -380,7 +453,24 @@ class R2Analyzer(cmd.Cmd):
             return chains
 
     def find_complete_call_chains(self, dangerous_refs: List[dict]) -> List[dict]:
+        """Find complete call chains for dangerous function calls
+        
+        Args:
+            dangerous_refs: Results from find_dangerous_functions()
+            
+        Returns:
+            List[dict]: Complete analysis results with format:
+            [{
+                'dangerous_function': str,          # Name of dangerous function
+                'dangerous_addr': int,              # Address of dangerous function
+                'caller_function': str,             # Name of immediate caller
+                'caller_addr': int,                 # Address of immediate caller
+                'call_chains': List[List[dict]],    # Complete call chains to entry points
+                'risk_score': float                 # Overall risk score
+            }]
+        """
         try:
+            # 使用字典来合并同一函数的多个危险调用
             function_results = {}
             
             for ref in dangerous_refs:
@@ -388,6 +478,7 @@ class R2Analyzer(cmd.Cmd):
                 caller_addr = ref['address']
                 
                 for dangerous_call in ref['dangerous_calls']:
+                    # 创建结果键
                     result_key = f"{caller_addr}_{dangerous_call['function']}"
                     
                     if result_key not in function_results:
@@ -407,9 +498,14 @@ class R2Analyzer(cmd.Cmd):
                         visited = set()
                         
                         def build_chain(current_addr: int, current_chain: List[dict]):
+                            """递归构建调用链，避免循环调用
+                            
+                            Args:
+                                current_addr: 当前分析的函数地址
+                                current_chain: 当前构建的调用链
+                            """
                             if any(func.get('offset') == current_addr for func in current_chain):
                                 return
-                            
                             func_info = self.r2.cmdj(f'afij @ {current_addr}')
                             if not func_info or not func_info[0]:
                                 return
@@ -419,6 +515,7 @@ class R2Analyzer(cmd.Cmd):
                             refs = self.r2.cmdj(f'axtj @ {current_addr}') or []
                             
                             if not refs:
+
                                 chains.append(new_chain)
                             else:
                                 for ref in refs:
@@ -434,6 +531,7 @@ class R2Analyzer(cmd.Cmd):
                         
                         for chain in unique_chains:
                             score = self._score_call_chain(chain, result['dangerous_function'])
+
                             if score > result['risk_score']:
                                 result['risk_score'] = score
                                 if chain not in result['call_chains']:
@@ -446,6 +544,7 @@ class R2Analyzer(cmd.Cmd):
             results = list(function_results.values())
             results.sort(key=lambda x: x['risk_score'], reverse=True)
             
+
             for result in results:
                 result['call_chains'] = result['call_chains'][:10]
             
@@ -454,6 +553,7 @@ class R2Analyzer(cmd.Cmd):
         except Exception as e:
             self.disassembly_logger.error(f"[Chain] Error in call chain analysis: {str(e)}")
             return []
+
     def _init_conversation(self):
         """Initialize conversation history"""
         self.message_history = [{
@@ -468,8 +568,8 @@ class R2Analyzer(cmd.Cmd):
        "analysis": {
            "risk_level": "Critical|High|Medium|Low|Unknown",
            "reason": {
-               "description": "reason description",
-               "evidence": "reason evidence"
+               "description": "Reason description",
+               "evidence": "Full call chain analysis;Code snippets required(For critical risk)"
            },
            "next_step": "Next analysis step explanation"
        },
@@ -688,14 +788,18 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
                 })
 
     def parse_llm_response(self, response: str) -> dict:
+
         self.disassembly_logger.info(f"[Parser] {response}")
         try:
+
             json_pattern = r'```(?:json)?\s*(\{.*?\})\s*```'
             matches = re.findall(json_pattern, response, re.DOTALL)
             
             if matches:
+
                 json_str = matches[-1].strip()
             else:
+
                 json_str = response.strip()
             
             result = json.loads(json_str)
@@ -708,18 +812,20 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
             error_msg = f"Parsing error: {str(e)}\nOriginal response: {response}..."
             self.disassembly_logger.error(f"[Parser] {error_msg}")
             
+
             return {
                 "analysis": {
                     "risk_level": "Unknown",
                     "reason": error_msg,
                     "next_step": "Please provide your response in valid JSON format."
                 },
-                "commands": "None",
+                "commands": "None",  
                 "status": "continue"
             }
         
     def execute_r2_command(self, cmd: str, timeout: int = 90) -> str:
-        with self.r2_lock:
+        """Execute r2 command with timeout control and thread safety"""
+        with self.r2_lock:  # Lock to ensure concurrency safety
             result_queue = queue.Queue()
             
             def run_command(cmd, result_queue):
@@ -735,6 +841,7 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
             
             try:
                 result = result_queue.get(timeout=timeout)
+
                 self.disassembly_logger.info(f"[Command] {cmd}")
                 self.disassembly_logger.info(f"[Result]\n{result}")
                 return result
@@ -744,26 +851,29 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
                 return f"ERROR: {str(e)}"
             
     def _validate_command(self, cmd_str: str) -> bool:
+        """Validate command format"""
         valid_commands = {
-            'pdd',
-            'pdf',
-            'afb',
-            'afvd',
-            'afcf',
-            'axt',
-            'axtj',
-            'aflm',
-            'afll',
-            'pds',
-            'af',
-            'afi',
+            'pdd',   # Decompile function (50 lines per view)
+            'pdf',   # Print disassembly (50 lines per view)
+            'afb',   # Analyze basic blocks (80 blocks per view)
+            'afvd',  # Analyze variables and parameters (100 items per view)
+            'afcf',  # View function call graph (100 calls per view)
+            'axt',   # View cross references (100 refs per view)
+            'axtj',  # View cross references in JSON format (100 refs per view)
+            'aflm',  # List local variables
+            'afll',  # List loop information
+            'pds',   # View string constants
+            'af',    # Analyze function
+            'afi',   # Get basic function info
         }
         
+        # Check if multiple commands are included
         if ';' in cmd_str:
             self.disassembly_logger.error("[!] Error: Only one command can be executed at a time. Do not use semicolons to connect multiple commands.")
             return False
         
         try:
+            # Check basic format
             parts = cmd_str.split()
             self.disassembly_logger.info(f"[Command] {parts}")
             base_cmd = parts[0]
@@ -775,6 +885,7 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
             return False
         
     def write_analysis_logs(self, function_name: str, thread_id: int):
+        """Write collected logs for a specific analysis"""
         logs = self.log_collector.get_logs(thread_id)
         if not logs:
             return
@@ -791,6 +902,7 @@ Remember: Execute commands sequentially, analyze each result thoroughly, and pro
                         f.write(log_text)
                 except Exception as e:
                     print(f"Error writing logs: {str(e)}")
+
     def analyze_function_risk(self, ref: dict):
         """Analyze function risk level based on dangerous function calls and call chains
         
@@ -868,9 +980,7 @@ Notice:
                 "content": initial_prompt,
                 "type": "initial_analysis"
             })
-            for idx, msg in enumerate(local_message_history):
-                self.disassembly_logger.info(f"\n--- Message {idx + 1} ---")
-                self.disassembly_logger.info(msg['content'])
+            self.disassembly_logger.info(initial_prompt)
             try:
                 for i in range(self.MAX_ITERATIONS):
                     response = self.get_llm_response(local_message_history)
@@ -958,6 +1068,7 @@ Notice:
             return last_analysis        
         
     def analyze_binary(self):
+        """Main analysis process without parallel processing"""
         @timeout_decorator(self.TIMEOUT_SECONDS)
         def run_analysis():
             if self.save_path:
@@ -1017,7 +1128,7 @@ Notice:
             
             filtered_results = [
                 result for result in all_results
-                if result.get('risk_level', '').upper() in ['CRITICAL', 'HIGH']
+                if result.get('risk_level', '').upper() in ['CRITICAL']
             ]
             
             return json.dumps(filtered_results, ensure_ascii=False, indent=2)
@@ -1032,6 +1143,7 @@ Notice:
             return "[]"
 
     def _save_final_results(self, results):
+        """Save analysis results to JSON file with simplified structure"""
         if not self.save_path:
             return
         
@@ -1053,7 +1165,6 @@ Notice:
                     "address": result.get('address'),
                     "risk_level": result.get('risk_level'),
                     "reason": result.get('reason'),
-                    "call_chain": result.get('call_chains', [])
                 }
                 simplified_results.append(simplified_result)
             
@@ -1067,6 +1178,7 @@ Notice:
             raise
 
     def analyze_binary_parallel(self):
+        """Main analysis process with parallel processing"""
         @timeout_decorator(self.TIMEOUT_SECONDS)
         def run_parallel_analysis():
             if self.save_path:
@@ -1120,7 +1232,7 @@ Notice:
             
             filtered_results = [
                 result for result in all_results
-                if result.get('risk_level', '').upper() in ['CRITICAL']
+                if result.get('risk_level', '').upper() in ['CRITICAL', 'HIGH']
             ]
             
             return json.dumps(filtered_results, ensure_ascii=False, indent=2)
@@ -1133,6 +1245,8 @@ Notice:
         except Exception as e:
             self.disassembly_logger.error(f"[Run] Error during parallel analysis: {str(e)}")
             return "[]"
+
+
 
 
 
