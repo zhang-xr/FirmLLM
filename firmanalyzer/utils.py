@@ -3,9 +3,11 @@ import re
 import json
 import logging
 import subprocess
+from firmanalyzer.LogManage import LogManager
 
-explorer_logger = logging.getLogger("explorer")
-analyzer_logger = logging.getLogger("analyzer")
+explorer_logger = LogManager.get_logger('Explorer')
+analyzer_logger = LogManager.get_logger('Analyzer')
+
 
 def check_real_permissions(file_path: str):
     try:

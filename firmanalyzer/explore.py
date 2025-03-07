@@ -19,12 +19,10 @@ from analyze import LLMClient, analysis_graph
 from tenacity import retry, stop_after_attempt, stop_after_delay, wait_exponential
 from callback import TokenUsageCallbackHandler
 from utils import check_real_permissions,parse_file_selection,parse_directory_selection,parse_directory_removal
+from LogManage import LogManager
 
-def get_logger(name):
-    return logging.getLogger(name)
-
-explorer_logger = get_logger('Explorer')
-analyzer_logger = get_logger('Analyzer')
+explorer_logger = LogManager.get_logger('Explorer')
+analyzer_logger = LogManager.get_logger('Analyzer')
 
 llm_client = LLMClient()
 

@@ -6,6 +6,7 @@ import time
 from bs4 import BeautifulSoup
 from typing import List, Dict, Any
 from client import create_openai_client
+
 def parse_openai_response(response_text: str) -> List[Dict[str, str]]:
     """
     Extract and validate JSON data from LLM response

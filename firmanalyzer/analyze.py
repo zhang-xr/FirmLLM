@@ -23,15 +23,9 @@ from llm_config import LLMClient
 from callback import TokenUsageCallbackHandler
 from tools import BinaryAnalyzer
 from utils import check_real_permissions, parse_analysis_response
-from R2decetor import R2VersionDetector
+from firmanalyzer.LogManage import LogManager
 
-def get_logger(name):
-    """Get a logger with the specified name"""
-    return logging.getLogger(name)
-
-# Create loggers for each module
-analysis_logger = get_logger('Analyzer')
-
+analysis_logger = LogManager.get_logger('Analyzer')
 
 llm_client = LLMClient()  # Use 'config.ini' by default
 

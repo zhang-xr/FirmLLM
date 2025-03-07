@@ -13,7 +13,6 @@ import queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from client import create_openai_client
 from typing import List, Optional
-import sys
 
 class ThreadLogCollector:
     def __init__(self):
