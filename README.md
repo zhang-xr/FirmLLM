@@ -11,7 +11,7 @@ FirmLLM is an integrated system that combines firmware collection and analysis f
 
 #### Main Features
 - Automated web interaction and downloads
-- Intelligent firmware information collection
+- Intelligent information collection
 - Multi-agent collaboration for parallel crawling
 - Distributed task scheduling
 
