@@ -56,7 +56,8 @@ sequenceDiagram
 
 ## Requirements
 - Python 3.8+
-- radare2 5.9.9 
+- radare2 5.9.9
+- binwalk v3.10(rust-binwalk)
 
 
 
