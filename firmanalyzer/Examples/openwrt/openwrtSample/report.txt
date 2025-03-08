@@ -1,0 +1,154 @@
+'''
+- [Location] bin/busybox
+- [Type] Component
+- [Version Info] BusyBox 1.28.4, CVE-2021-42381, CVE-2021-42380, CVE-2021-42379, CVE-2021-42378, CVE-2021-42377
+- [Description] Multiple critical and high severity vulnerabilities found in the awk applet of BusyBox.
+- [Details] Use-after-free issues in the awk applet allow remote code execution. CVE-2021-42377 also highlights command injection risks due to mishandling of shell commands.
+- [Impact] Potential remote code execution and command injection attacks.
+- [Risk Level] Critical
+
+- [Location] bin/opkg
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical security issues identified in sym.remove_maintainer_scripts and sym.pkg_dest_init functions.
+- [Details] Lack of input validation and use of insecure functions like sym_sprintf_alloc lead to format string vulnerabilities and arbitrary code execution risks. sym.pkg_dest_init handles configuration files without sanitization.
+- [Impact] Arbitrary code execution and memory corruption risks.
+- [Risk Level] Critical
+
+- [Location] bin/uclient-fetch
+- [Type] Component/Credential
+- [Version Info] Unknown
+- [Description] Sensitive content and critical vulnerabilities detected.
+- [Details] Embedded HTTP authentication password parameter (--password=<password>) poses credential exposure risk. Function pointer execution without validation (sym.imp.getenv) and unvalidated parameters passed to memcpy via sym.imp.uclient_set_proxy_url could lead to memory corruption or remote code execution.
+- [Impact] Potential credential exposure and remote code execution/memory corruption.
+- [Risk Level] Critical
+
+- [Location] bin/config_generate
+- [Type] Configuration/Credential
+- [Version Info] Unknown
+- [Description] Hardcoded default credentials and insecure configurations.
+- [Details] Default password 'password' embedded. Default IP addresses (e.g., 192.168.1.1), subnet masks, NTP servers ('0.openwrt.pool.ntp.org'), and hostname ('OpenWrt') are hardcoded. PPPoE network configurations include default username 'username' and password 'password'.
+- [Impact] Unauthorized access due to easily guessable credentials and potential fingerprinting of the system.
+- [Risk Level] High
+'''
+'''
+- [Location] sbin/init
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Potential exposure of debug functionality and insecure use of 'chroot'.
+- [Details] The binary contains references to 'init_debug' and '/tmp/debug_level', indicating possible debug functionality. Additionally, improper implementation of 'chroot' without privilege dropping could lead to privilege escalation.
+- [Impact] Exposure of sensitive information or privilege escalation if misconfigured.
+- [Risk Level] Medium
+
+- [Location] sbin/init
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Dependency on potentially outdated or vulnerable shared libraries.
+- [Details] The binary depends on libraries such as 'libubox.so', 'libubus.so', and 'libjson-c.so.2'. Outdated versions of these libraries may contain known vulnerabilities.
+- [Impact] Possible exploitation of library vulnerabilities leading to system compromise.
+- [Risk Level] Medium
+
+- [Location] sbin/init
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical security risks in function fcn.004019d4 due to improper handling of sensitive operations.
+- [Details] Function constructs and executes commands using hardcoded strings ('/bin/sh', '/etc/preinit') without input validation, allowing potential command injection.
+- [Impact] Remote code execution or privilege escalation through malicious payloads.
+- [Risk Level] Critical
+
+- [Location] sbin/mtd
+- [Type] Component
+- [Version Info] Version 2.0, CVE-2016-9092
+- [Description] Cross-site request forgery (CSRF) vulnerability in the Mail Threat Defense (MTD) management console.
+- [Details] CVE-2016-9092 allows unauthorized actions using an authenticated administrator's privileges.
+- [Impact] Unauthorized configuration changes or actions by attackers.
+- [Risk Level] High
+
+- [Location] sbin/mtd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical risk identified in disassembly analysis.
+- [Details] Unconditional jump to insecure system call at 0x400f84, combined with lack of identifiable callers for sym.imp.sscanf and handling of 'str.unlock'.
+- [Impact] Potential remote code execution or command injection.
+- [Risk Level] Critical
+
+- [Location] sbin/netifd
+- [Type] Component
+- [Version Info] OpenWrt versions prior to 19.07.7, CVE-2021-22161
+- [Description] Routing loop vulnerability when IPv6 is used.
+- [Details] CVE-2021-22161 describes a routing loop condition leading to excessive network traffic.
+- [Impact] Network performance degradation or denial of service.
+- [Risk Level] High
+
+- [Location] sbin/netifd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical vulnerabilities in disassembly analysis.
+- [Details] Format string vulnerability in fprintf, unvalidated input passed to recv, and memcpy with attacker-controllable parameters.
+- [Impact] Remote code execution, memory corruption, or buffer overflow attacks.
+- [Risk Level] Critical
+
+- [Location] sbin/rpcd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical vulnerabilities in RPC handling functions.
+- [Details] Insecure printf/asprintf calls with user-controlled inputs and format string vulnerabilities.
+- [Impact] Remote code execution or system compromise via malicious RPC inputs.
+- [Risk Level] Critical
+
+- [Location] sbin/rpcd
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Sensitive keyword exposure.
+- [Details] Presence of keywords 'password' and 'keys' suggests potential sensitive data handling.
+- [Impact] Unauthorized access or credential leakage if improperly managed.
+- [Risk Level] Medium
+
+- [Location] sbin/logread
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential exposure of operational parameters.
+- [Details] Pattern 'u0fcs:l:r:F:p:S:P:h:e:t' indicates embedded sensitive configuration data.
+- [Impact] Exposure of operational details or sensitive configurations.
+- [Risk Level] Medium
+
+- [Location] sbin/uci
+- [Type] Component
+- [Version Info] Affected by CVE-2017-17867
+- [Description] Known vulnerability allowing arbitrary OS command execution.
+- [Details] CVE-2017-17867 allows authenticated users to execute commands via manipulation of configuration fields.
+- [Impact] Arbitrary command execution through insecure configuration handling.
+- [Risk Level] High
+
+- [Location] sbin/uci
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical security issue due to insecure use of 'sscanf'.
+- [Details] Lack of input validation for 'sscanf' increases risk of buffer overflow or format string vulnerabilities.
+- [Impact] Possible remote code execution or system compromise.
+- [Risk Level] Critical
+
+- [Location] sbin/wifi
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential exposure of WiFi WEP keys.
+- [Details] Script includes logic for preparing WEP keys, which are inherently insecure.
+- [Impact] Exposure of sensitive key material if improperly handled.
+- [Risk Level] Medium
+
+- [Location] sbin/hotplug-call
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Exposure of privileged environment variables.
+- [Details] Script exports USER=root and LOGNAME=root, posing a risk of privilege misuse.
+- [Impact] Privilege escalation or misuse during execution of external scripts.
+- [Risk Level] Medium
+
+- [Location] sbin/hotplug-call
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Execution of unvalidated scripts from /etc/hotplug.d/$1.
+- [Details] Script sources all scripts in the directory without integrity or permission checks.
+- [Impact] Remote code execution if an attacker places a malicious script in the directory.
+- [Risk Level] Critical
+'''
