@@ -1,0 +1,180 @@
+'''
+- [Location] etc/activate_tunnel.sh
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Script lacks input validation and sanitization for critical commands.
+- [Details] The script dynamically retrieves network parameters and uses variables like $cfg, $cmd, $dev, and $remote without proper sanitization in commands such as `ip link` and `ip l2tp`, which could lead to command injection vulnerabilities.
+- [Impact] Potential arbitrary command execution with script privileges.
+- [Risk Level] High
+
+- [Location] etc/common.sh
+- [Type] Component
+- [Version Info] Version referenced via "/lib/version"
+- [Description] Exposure of version details and insecure handling of sensitive data in ramdisk.
+- [Details] The script mounts a ramdisk and switches the root filesystem using `pivot_root`. It copies files like `/usr/etc/common.sh`, `/lib/version`, and `/bin/busybox` into the ramdisk, potentially exposing sensitive data if compromised.
+- [Impact] Attackers may exploit known vulnerabilities associated with exposed versions or extract sensitive information from the ramdisk.
+- [Risk Level] Medium
+
+- [Location] etc/default_ar9344.cfg
+- [Type] Credential/Configuration
+- [Version Info] Unknown
+- [Description] Exposure of plaintext passwords and default Wi-Fi PSK.
+- [Details] Contains users.1.password=VvpvCwhccFv6Q and aaa.1.wpa.psk=DEFAULTPASSWORD, exposing credentials and pre-shared keys.
+- [Impact] Unauthorized access to user accounts and Wi-Fi networks.
+- [Risk Level] Critical
+
+- [Location] etc/default_bcm5334x.cfg
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Presence of plaintext password in configuration file.
+- [Details] Contains users.1.password=VvpvCwhccFv6Q, exposing a plaintext password.
+- [Impact] Unauthorized access to user accounts if the file is accessed by attackers.
+- [Risk Level] High
+
+- [Location] etc/default_nossid.cfg
+- [Type] Credential/Configuration
+- [Version Info] Unknown
+- [Description] Exposure of plaintext password and use of default settings.
+- [Details] Contains users.1.password=VvpvCwhccFv6Q and mgmt.is_default=true, indicating default configurations and exposed credentials.
+- [Impact] Increased attack surface due to default settings and potential unauthorized access.
+- [Risk Level] High
+
+- [Location] etc/default_qca956x.cfg
+- [Type] Credential/Configuration
+- [Version Info] Unknown
+- [Description] Default credentials and WPA PSK exposure, along with bridged network risks.
+- [Details] Contains users.1.name=ubnt, users.1.password=VvpvCwhccFv6Q, aaa.1.wpa.psk=DEFAULTPASSWORD, and bridge.1.devname=br0, exposing sensitive data and internal devices.
+- [Impact] Unauthorized access to user accounts, Wi-Fi networks, and internal devices.
+- [Risk Level] Critical
+
+- [Location] etc/.version
+- [Type] Other
+- [Version Info] 4.3.22
+- [Description] Exposure of firmware version information.
+- [Details] File contains "4.3.22", exposing specific firmware version details.
+- [Impact] Attackers may exploit known vulnerabilities associated with this version.
+- [Risk Level] Medium
+
+- [Location] etc/hotplug2.rules
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Improper device handling with insecure permissions.
+- [Details] Rules expose devices (e.g., /dev/%DEVICENAME%) with mode 0666, allowing unauthorized access.
+- [Impact] Unauthorized access to critical device files.
+- [Risk Level] Medium
+
+- [Location] etc/profile
+- [Type] Other
+- [Version Info] Unknown
+- [Description] Exposure of version details through `/etc/version`.
+- [Details] File references `/etc/version`, potentially exposing system or software version information.
+- [Impact] Attackers may identify and exploit vulnerabilities associated with the exposed version.
+- [Risk Level] Low
+
+- [Location] etc/protocols
+- [Type] Other
+- [Version Info] IPv6 and related components
+- [Description] Exposure of version identifiers for protocols.
+- [Details] File mentions IPv6 and related components with version identifiers.
+- [Impact] Attackers may target specific versions with known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] etc/services
+- [Type] Other
+- [Version Info] Multiple services (e.g., Kerberos v5, POP version 2/3, IMAP version 2)
+- [Description] Exposure of service versions and unnecessary network service ports.
+- [Details] References to specific versions of services and ports like 'kpasswd' on port 761/tcp. CVEs (e.g., CVE-2018-5710, CVE-2012-1015) affect MIT Kerberos 5.
+- [Impact] Potential denial of service, remote code execution, or exploitation of outdated protocols.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/passwd
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Password hash exposure for the 'ubnt' user.
+- [Details] The file contains a password hash ('VvpvCwhccFv6Q') for the 'ubnt' user.
+- [Impact] Exposure of password hashes can lead to offline brute-force attacks.
+- [Risk Level] Medium
+
+- [Location] etc/default-ec20.cfg
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Default password and insecure wireless settings.
+- [Details] Default password (users.1.password=VvpvCwhccFv6Q), unencrypted wireless networks (wireless.1.security=none, wireless.2.security=none), and exposed version info via mgmt.flavor=ace.
+- [Impact] Potential unauthorized access and network exploitation.
+- [Risk Level] High
+
+- [Location] etc/default_nossid_qca956x.cfg
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Plaintext password and insecure wireless settings.
+- [Details] Plaintext password (users.1.password=VvpvCwhccFv6Q), wireless security disabled (wireless.1.security=none), hidden SSID (wireless.1.hide_ssid=true), and internal syslog server IP (syslog.remote.ip=192.168.1.1).
+- [Impact] Unauthorized system access and increased risk of network compromise.
+- [Risk Level] Critical
+
+- [Location] etc/system.cfg
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Plaintext password exposure for the user 'ubnt'.
+- [Details] Plaintext password (users.1.password=VvpvCwhccFv6Q) for the user 'ubnt'.
+- [Impact] Significant security risk if firmware is compromised.
+- [Risk Level] High
+
+- [Location] etc/syswrapper.sh
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Multiple security vulnerabilities including predictable lockfile paths, use of weak hashing algorithms, insecure handling of tokens, and command injection risks.
+- [Details] Predictable lockfile paths (/var/run/fwupdate.pid, /var/run/led.lock), weak hashing (MD5), plaintext token storage (/var/run/stream.token), use of `eval` without input validation, and insecure use of curl for firmware downloads.
+- [Impact] Privilege escalation, information disclosure, and potential remote code execution.
+- [Risk Level] Critical
+
+- [Location] etc/ethertypes
+- [Type] Other
+- [Version Info] IPv4, IPv6
+- [Description] Exposure of IP version information.
+- [Details] Explicit mentions of IP versions (IPv4 and IPv6).
+- [Impact] Possible identification of protocol-specific vulnerabilities.
+- [Risk Level] Low
+'''
+'''
+- [Location] etc/rc.d/rc
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential SSH key and certificate setup issue detected.
+- [Details] The script references 'rc.identity' for setting up certificates and SSH keys. It dynamically generates SSH keys if they are not present and creates symbolic links for web server certificates ('server.crt', 'server.key'). However, it does not enforce strong permissions or verify the integrity of these files.
+- [Impact] Improper handling could lead to unauthorized access due to weak file permissions or exposure of sensitive cryptographic material.
+- [Risk Level] Medium
+
+- [Location] etc/rc.d/rc.btusb
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential insecure handling of Bluetooth MAC address (bdaddr).
+- [Details] The script retrieves and processes a Bluetooth MAC address from '/proc/ubnthal/system.info' without validating its source or integrity.
+- [Impact] If an attacker manipulates this value, it could lead to unauthorized Bluetooth device impersonation or misconfiguration.
+- [Risk Level] Medium
+
+- [Location] etc/rc.d/rc.identity
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential exposure of sensitive cryptographic material.
+- [Details] The script handles SSH keys (RSA and DSS) and web server certificates. It checks for pre-existing keys but generates new ones using dropbearkey if none are found. Permissions or storage locations are not explicitly secured.
+- [Impact] This could lead to unintended exposure of private keys if permissions or storage locations are improperly secured.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/udhcpc/udhcpc
+- [Type] Component
+- [Version Info] BusyBox udhcpc version 1.20, CVE-2016-2148, CVE-2016-2147
+- [Description] The identified version of udhcpc is vulnerable to two critical vulnerabilities: CVE-2016-2148 (Heap-based buffer overflow) and CVE-2016-2147 (Integer overflow).
+- [Details] Both vulnerabilities affect versions of BusyBox udhcpc prior to 1.25.0. These issues could allow remote attackers to cause a denial of service or potentially execute arbitrary code.
+- [Impact] Remote code execution or denial of service by exploiting heap-based buffer overflow or integer overflow vulnerabilities.
+- [Risk Level] Critical
+
+- [Location] etc/udhcpc/udhcpc_ip_only
+- [Type] Component
+- [Version Info] BusyBox udhcpc version unknown, CVE-2016-2148, CVE-2016-2147, CVE-2011-2716
+- [Description] Multiple vulnerabilities detected in the script including CVE-2016-2148 (Heap-based buffer overflow), CVE-2016-2147 (Integer overflow), and CVE-2011-2716 (Command injection via DHCP options). 
+- [Details] The script uses 'eval' to process configuration data dynamically without visible input sanitization. Specifically, the line `eval \`grep dhcpc\. $CFG_FILE | /bin/sed ...` processes data from '/tmp/system.cfg' or '/tmp/running.cfg', making it vulnerable to command injection if an attacker controls these files.
+- [Impact] Potential for remote code execution, denial of service, or command injection due to improper handling of dynamic input.
+- [Risk Level] Critical
+'''
