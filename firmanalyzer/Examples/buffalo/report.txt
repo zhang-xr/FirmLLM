@@ -1,0 +1,424 @@
+'''
+- [Location] bin/busybox
+- [Type] Component
+- [Version Info] BusyBox v1.25.1 | CVE-2019-5747, CVE-2021-28831, CVE-2018-20679, CVE-2017-16544, CVE-2017-15874, CVE-2017-15873, CVE-2016-6301, CVE-2015-9261
+- [Description] Multiple vulnerabilities identified in BusyBox v1.25.1, including out-of-bounds read, invalid free, integer underflow/overflow, and pointer misuse issues.
+- [Details] The binary exposes its version string "v1.25.1". Critical vulnerabilities include insecure function usage ('gets', 'vsprintf', 'sscanf') without input validation or sanitization, lack of stack canaries, ASLR, and DEP protections. Additionally, sensitive strings like '/etc/passwd' and '/etc/shadow' were found.
+- [Impact] Potential for remote code execution, denial-of-service, and unauthorized access to sensitive authentication data.
+- [Risk Level] Critical
+
+- [Location] bin/busybox
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Sensitive content exposure related to password handling.
+- [Details] Strings such as '/etc/passwd', '/etc/shadow', and prompts for old/new passwords were identified, indicating the binary may handle sensitive authentication data insecurely.
+- [Impact] Risk of exposing sensitive user credentials if improperly secured.
+- [Risk Level] High
+
+- [Location] bin/ipcalc.sh
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Improper input validation in the script creates a risk of command injection or logical errors.
+- [Details] User-supplied arguments (ARGV) are used directly in bitwise operations and network calculations without validation or sanitization in functions like ip2int(), int2ip(), and compl32().
+- [Impact] Potential for command injection, arbitrary code execution, or unintended behavior.
+- [Risk Level] Medium
+
+- [Location] bin/uclient-fetch
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Sensitive content exposure due to insecure credential handling.
+- [Details] The string '--password=<password>' was found in the binary, suggesting insecure storage or transmission of credentials.
+- [Impact] Risk of credential exposure leading to unauthorized access.
+- [Risk Level] High
+
+- [Location] bin/config_generate
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Default credentials embedded in the script pose a security risk.
+- [Details] The script contains plaintext default username='username' and password='password', actively used to configure PPPoE credentials.
+- [Impact] Unauthorized access risk if default credentials are not changed during deployment.
+- [Risk Level] High
+
+- [Location] bin/config_generate
+- [Type] Component
+- [Version Info] BusyBox 3.5.0 | CVE-2022-30065, CVE-2021-42381
+- [Description] Vulnerabilities associated with BusyBox version 3.5.0 included in the script.
+- [Details] Multiple critical and high severity vulnerabilities exist, potentially allowing remote code execution or denial-of-service attacks.
+- [Impact] Remote code execution or denial-of-service under specific conditions.
+- [Risk Level] Critical
+'''
+'''
+- [Location] sbin/init
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Use of insecure function sprintf and function pointer invocation increases risk of arbitrary code execution.
+- [Details] Decompiled output confirms direct invocation of sprintf() at address 0x4015c8 without input sanitization or bounds checking. A function pointer call (*0x8a06800)() was identified, increasing the risk of arbitrary code execution. Dynamically linked libraries include libubox.so, libubus.so, libjson-c.so.2, libblobmsg_json.so, libjson_script.so, libgcc_s.so.1, and libc.so.
+- [Impact] Potential for remote code execution due to lack of input validation and modern protections.
+- [Risk Level] Critical
+
+- [Location] sbin/netifd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Format string vulnerabilities identified in printf and fprintf calls.
+- [Details] The disassembly reveals that printf at 0x402974 and fprintf lack proper input validation. sym._fini at 0x4115a4 directly calls fprintf without input validation. No stack canaries, ASLR, or other protections are evident.
+- [Impact] Potential for arbitrary memory read/write or remote code execution via format string attacks.
+- [Risk Level] Critical
+
+- [Location] sbin/procd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Lack of input validation and use of insecure functions like gets and sscanf.
+- [Details] The disassembly shows absence of input validation or sanitization leading to vulnerable functions including 'gets' and insecure 'sscanf'. No modern protections such as stack canaries or ASLR are present.
+- [Impact] Potential for buffer overflow and arbitrary code execution.
+- [Risk Level] Critical
+
+- [Location] sbin/kmodloader
+- [Type] Component
+- [Version Info] CVE-2014-3484
+- [Description] Stack-based buffer overflows in the __dn_expand function of musl libc.
+- [Details] Affects musl libc versions before 1.1.2 and versions 0.9.13 through 1.0.3.
+- [Impact] Remote attackers could cause unspecified impacts or denial of service.
+- [Risk Level] High
+
+- [Location] sbin/logread
+- [Type] Component
+- [Version Info] CVE-2023-29778, Version 4.3.0 (requires confirmation)
+- [Description] OS Command Injection vulnerability.
+- [Details] Identified CVE-2023-29778 indicates a critical OS Command Injection vulnerability in the logread component for versions up to 4.1.0 Release 2.
+- [Impact] Potential for arbitrary command execution if version is within the vulnerable range.
+- [Risk Level] Critical
+
+- [Location] sbin/fw3
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical security issue in initialization process.
+- [Details] The `sym._init` function invokes `fcn.0040b100`, which contains a loop dynamically executing code using the `jalr t9` instruction combined with the use of the insecure `gets` function.
+- [Impact] Potential for remote code execution during program startup.
+- [Risk Level] Critical
+
+- [Location] sbin/sysupgrade
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Supports restoring configuration from a URL without proper validation.
+- [Details] The '--restore-backup' option allows specifying a URL for the configuration file without clear input validation. The '--force' option allows bypassing image checks.
+- [Impact] Potential for arbitrary code execution and flashing malicious firmware images.
+- [Risk Level] Critical
+
+- [Location] sbin/wifi
+- [Type] Component/Credential
+- [Version Info] CVE-2024-53940, CVE-2024-53939, CVE-2024-53937, CVE-2017-8772, CVE-2024-53938
+- [Description] Multiple critical vulnerabilities including command injection, default credentials, and unauthenticated TELNET access.
+- [Details] Function 'prepare_key_wep' processes WEP keys without proper input sanitization. Discovered CVEs indicate severe security flaws allowing remote code execution and full device compromise.
+- [Impact] Attackers can execute arbitrary commands with root-level permissions and gain full control over the device.
+- [Risk Level] Critical
+'''
+'''
+- [Location] lib/libc.so
+- [Type] Component
+- [Version Info] musl libc 1.1.15, CVE-2019-14697
+- [Description] The libc.so file is vulnerable to a medium-severity out-of-bounds write issue due to an x87 floating-point stack adjustment imbalance.
+- [Details] Two critical issues were identified: 
+  1. In sym.__init_ssp, the memcpy operation lacks input validation, enabling potential memory corruption or information disclosure.
+  2. In sym.bind_textdomain_codeset, the use of 'gets' introduces a buffer overflow risk due to lack of bounds checking.
+- [Impact] Potential memory corruption, information disclosure, or buffer overflow attacks.
+- [Risk Level] Critical
+
+- [Location] lib/libc.so
+- [Type] Component
+- [Version Info] musl libc 1.1.15
+- [Description] Use of unsafe functions in libc.so increases the risk of code execution vulnerabilities.
+- [Details] The function sym.bind_textdomain_codeset uses 'gets', which is inherently unsafe and could allow remote code execution under certain conditions.
+- [Impact] Remote code execution through crafted payloads exploiting unsafe function usage.
+- [Risk Level] High
+
+- [Location] lib/libuci.so
+- [Type] Component
+- [Version Info] Version 4.3, CVE-2020-28951
+- [Description] The libuci.so file is affected by a use-after-free vulnerability when handling malicious package names.
+- [Details] This issue affects versions prior to OpenWrt 18.06.9 and 19.07.5, potentially including version 4.3 detected in this file.
+- [Impact] Memory corruption leading to privilege escalation or application crashes.
+- [Risk Level] High
+
+- [Location] lib/libubox.so
+- [Type] Component
+- [Version Info] CVE-2020-7248
+- [Description] A stack-based buffer overflow vulnerability exists in the JSON serialization functionality of libubox.
+- [Details] Versions prior to 18.06.7 and 19.07.1 are affected, allowing potential remote code execution via crafted payloads targeting JSON serialization.
+- [Impact] Remote code execution through exploitation of JSON serialization flaws.
+- [Risk Level] Critical
+
+- [Location] lib/uboot-envtools.sh
+- [Type] Configuration
+- [Version Info] Version string '2011-2012'
+- [Description] The script contains outdated components, indicated by the embedded version string '2011-2012'.
+- [Details] The script manipulates U-Boot environment variables and writes configurations to /etc/fw_env.config without validating inputs, posing a risk of misconfiguration or unintended behavior.
+- [Impact] Potential injection of malicious configurations if input sources are not controlled.
+- [Risk Level] Medium
+
+- [Location] lib/functions.sh
+- [Type] Component
+- [Version Info] Copyright (C) 2006-2014 OpenWrt.org
+- [Description] Exposure of version information in the script may assist attackers in identifying outdated software.
+- [Details] The script contains the copyright string "Copyright (C) 2006-2014 OpenWrt.org", revealing its age and potentially outdated status.
+- [Impact] Increased risk of targeted attacks based on known vulnerabilities of older software versions.
+- [Risk Level] Low
+
+- [Location] lib/functions.sh
+- [Type] Component
+- [Version Info] N/A
+- [Description] Dangerous use of 'eval' in the append() function creates a high-risk code injection vulnerability.
+- [Details] The 'append' function dynamically constructs and executes variable assignments using 'eval'. Variables $var and $value are directly passed without sanitization, potentially allowing code injection if influenced by user input.
+- [Impact] Code injection vulnerabilities leading to unauthorized command execution.
+- [Risk Level] High
+'''
+'''
+- [Location] lib/libc.so
+- [Type] Component
+- [Version Info] musl libc 1.1.15, CVE-2019-14697
+- [Description] The libc.so file is affected by CVE-2019-14697, which describes an x87 floating-point stack adjustment imbalance in musl libc versions through 1.1.23.
+- [Details] The identified version string (1.1.15) falls within the vulnerable range of CVE-2019-14697. This vulnerability could allow an attacker to perform out-of-bounds writes due to improper handling in the math/i386/ directory.
+- [Impact] Potential memory corruption or arbitrary code execution via out-of-bounds writes.
+- [Risk Level] Critical
+'''
+'''
+- [Location] etc/preinit
+- [Type] Component
+- [Version Info] Copyright year range: 2006-2016, potential outdated software components | CVE number: Unknown
+- [Description] Version information exposure indicating potentially outdated software components.
+- [Details] The script contains a copyright notice with the year range '2006-2016', which could indicate the use of outdated software components if this reflects the actual version in use. Outdated versions may contain unpatched vulnerabilities.
+- [Impact] Potential exposure to known vulnerabilities associated with outdated software.
+- [Risk Level] Medium
+
+- [Location] etc/shadow
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Root account has no password set.
+- [Details] The root account has an empty password field, allowing unrestricted access to the system.
+- [Impact] Full system compromise due to unauthorized access.
+- [Risk Level] Critical
+
+- [Location] etc/key-build.pub
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Private key exposure in public file.
+- [Details] Private key exposure found in the file content: "private key 605c7f1ccfcc1f58".
+- [Impact] Unauthorized access to sensitive systems or data.
+- [Risk Level] High
+
+- [Location] etc/sysctl.conf
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Disabled bridge firewalling and enabled IP forwarding.
+- [Details] Bridge firewalling is disabled (net.bridge.bridge-nf-call-* set to 0), and IP forwarding is enabled for both IPv4 and IPv6 (net.ipv4.ip_forward=1 and net.ipv6.conf.all.forwarding=1).
+- [Impact] Increased attack surface, unintended routing, or exposure in untrusted networks.
+- [Risk Level] Medium
+
+- [Location] etc/rc.common
+- [Type] Component/Configuration
+- [Version Info] Copyright year range: 2006-2012, potential outdated software components | CVE number: Unknown
+- [Description] Version information exposure and insecure handling of service control variables.
+- [Details] The script contains a copyright notice with the version year range '2006-2012'. It also uses variables like $START and $STOP without proper validation or sanitization when managing services.
+- [Impact] Unintended service behavior, exposure, or unauthorized service manipulation.
+- [Risk Level] Medium
+
+- [Location] etc/hotplug.json
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Device nodes created with broad permissions and risky external script execution.
+- [Details] The 'makedev' calls create device nodes with permissions like 0666, and 'exec' calls execute scripts or binaries without strict input validation.
+- [Impact] Unauthorized access to device nodes and potential command injection risks.
+- [Risk Level] Medium
+
+- [Location] etc/profile
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Empty root password detected.
+- [Details] The script explicitly checks for an empty root password by reading /etc/shadow, confirming the absence of a root password.
+- [Impact] Unauthorized SSH logins and potential system compromise.
+- [Risk Level] High
+
+- [Location] etc/services
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Insecure service configurations exposing plaintext protocols.
+- [Details] Definitions for unencrypted services like telnet (23/tcp), ftp (21/tcp), and others are present, along with protocols like chargen and echo that can be exploited for DDoS amplification attacks.
+- [Impact] Data interception, misuse of outdated services, and potential DDoS amplification risks.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/ssl/openssl.cnf
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Potential exposure of sensitive information including private key paths and placeholder passwords.
+- [Details] The configuration file contains references to private keys (e.g., cakey.pem, tsakey.pem) and placeholder passwords ('secret'). Additionally, URLs pointing to certificate revocation lists (CRLs) were identified. Multiple IP-like patterns and URLs were also found, which may or may not be valid endpoints.
+- [Impact] If these private keys or placeholder passwords are used in production without proper protection, they could lead to unauthorized access or misuse, such as forging certificates or other malicious activities. The presence of URLs pointing to CRLs may indicate external dependencies that need to be secured.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/ssl/openssl.cnf
+- [Type] Configuration
+- [Version Info] OpenSSL configuration, algorithms: md5, sha1 (Vulnerable to collision attacks)
+- [Description] Weak hash algorithms (md5, sha1) are specified as acceptable message digests in the TSA configuration section.
+- [Details] The configuration explicitly lists "md5" and "sha1" as acceptable message digests in the "digests" field under the [tsa_config1] section. These algorithms are considered weak and insecure for cryptographic purposes due to known vulnerabilities (e.g., collision attacks).
+- [Impact] Potential integrity and authenticity issues in timestamping operations, increasing the risk of forged or tampered timestamps.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/config/dropbear
+- [Type] Configuration
+- [Version Info] Dropbear SSH server, affected by CVE-2023-48795 (Critical), CVE-2021-36369, CVE-2020-36254, CVE-2019-12953, CVE-2018-15599
+- [Description] The configuration enables 'PasswordAuth' and 'RootPasswordAuth', increasing the risk of brute force attacks and unauthorized access. Multiple vulnerabilities in Dropbear further exacerbate risks.
+- [Details] The file explicitly sets 'PasswordAuth' and 'RootPasswordAuth' to 'on'. CVE-2023-48795 allows integrity check bypass, while other CVEs introduce risks such as user enumeration and abuse of forwarded agents.
+- [Impact] Potential unauthorized access via SSH, exploitation of known vulnerabilities leading to system compromise.
+- [Risk Level] Critical
+
+- [Location] etc/config/uhttpd
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Private key exposure risk due to explicit reference to /etc/uhttpd.key in the configuration.
+- [Details] The private key file /etc/uhttpd.key is referenced. If improperly secured, it could allow decryption of HTTPS traffic or server impersonation.
+- [Impact] Unauthorized access to encrypted communications if the private key is exposed.
+- [Risk Level] High
+
+- [Location] etc/config/ddns
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Sensitive information exposure through placeholders for username and password in the update URL.
+- [Details] The configuration contains fields for "your_username" and "your_password", along with placeholders [USERNAME] and [PASSWORD] in the update URL.
+- [Impact] Exposure of credentials if actual values replace placeholders, leading to potential unauthorized access.
+- [Risk Level] Medium
+
+- [Location] etc/config/etherwake
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Plaintext password exposure for wake-on-LAN functionality.
+- [Details] The file contains a plaintext password "AABBCCDDEEFF".
+- [Impact] Unauthorized use of wake-on-LAN functionality if credentials are exposed.
+- [Risk Level] High
+
+- [Location] etc/config/pptpd
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Plaintext credentials ('youruser'/'yourpass') and IP configurations exposed.
+- [Details] The file contains plaintext credentials and PPTP server IP configurations (local: 192.168.0.1, remote range: 192.168.0.20-30).
+- [Impact] Increased risk of unauthorized access to the PPTP server.
+- [Risk Level] High
+
+- [Location] etc/config/rpcd
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Weak credential storage with plaintext username ('webuser') and insecurely formatted password ('$p$webuser').
+- [Details] The file stores a plaintext username and an insecurely formatted password.
+- [Impact] Potential unauthorized access if the system is compromised.
+- [Risk Level] Medium
+
+- [Location] etc/config/snmpd
+- [Type] Configuration
+- [Version Info] SNMP versions v1, v2c, usm; affected by CVE-2005-3722
+- [Description] Default SNMP community strings "public" (read-only) and "private" (read-write) configured, exposing the system to unauthorized access.
+- [Details] The configuration uses default community strings "public" (accessible from any source) and "private" (restricted to localhost). Versions v1 and v2c lack encryption and are susceptible to protocol-based attacks.
+- [Impact] Unauthorized read or write access to SNMP-managed devices, data interception, and device manipulation.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/init.d/dropbear
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] The script enables RootPasswordAuth and RootLogin by default, which could allow unauthorized root access if the password is compromised.
+- [Details] The configuration explicitly enables RootPasswordAuth:bool:1 and RootLogin:bool:1. Additionally, it allows PasswordAuth:bool:1 and handles RSA host keys (dropbear_rsa_host_key).
+- [Impact] Unauthorized users with valid credentials can gain root access, and improper handling of RSA keys could lead to unauthorized access.
+- [Risk Level] High
+
+- [Location] etc/init.d/boot
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Hardcoded sensitive data found in the boot script.
+- [Details] The script contains a hardcoded PSK value 'FacWPAPSK1_BK=12345' and includes default credential handling logic for hardware type wsr-600.
+- [Impact] Unauthorized access to the wireless network if the PSK is extracted or default credentials are exploited.
+- [Risk Level] High
+
+- [Location] etc/init.d/embeddd
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Sensitive DDNS credentials are exposed in plaintext within the script.
+- [Details] The validate_ddns_section function processes username, password, and domain information, exposing these fields as plain string inputs.
+- [Impact] Exposure of sensitive DDNS authentication data could lead to unauthorized access to DDNS services.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/openvpn
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] The script writes sensitive cryptographic material to a runtime configuration file without explicit permission settings.
+- [Details] Inline certificates and keys (ca_inline, cert_inline, key_inline, tls_inline) are decoded and written to /var/run/ovpn.config in plaintext.
+- [Impact] If an attacker gains access to /var/run/ovpn.config, they could retrieve private keys or certificates, compromising the VPN infrastructure.
+- [Risk Level] Critical
+
+- [Location] etc/init.d/pptpd
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] The script writes sensitive login credentials to a file without encryption and allows unrestricted TCP access on port 1723.
+- [Details] The variable "password" is written to $CHAP_SECRETS in plaintext, and firewall rules permit unrestricted access to the PPTP service.
+- [Impact] Exposure of sensitive credentials and potential exploitation of the PPTP service due to weak firewall rules.
+- [Risk Level] High
+
+- [Location] etc/init.d/snmpd
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] The script dynamically constructs an SNMP configuration file using user-provided values without secure defaults or proper validation.
+- [Details] Variables like $community are used without ensuring secure defaults, potentially allowing weak community strings such as "public" or "private."
+- [Impact] Unauthorized access to the SNMP service and potential exploitation of known vulnerabilities associated with specific SNMP versions.
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/init.d/openvpn
+- [Type] Credential/Configuration
+- [Version Info] Unknown
+- [Description] Sensitive data exposure through plaintext storage of credentials and insecure management interface binding.
+- [Details] The script writes username and password to /var/run/ovpn_auth.txt in plaintext when user_pass_auth is enabled. Additionally, a management interface is bound to 127.0.0.1:14 without clear evidence of access restrictions.
+- [Impact] Exposes sensitive authentication data to potential unauthorized access if file permissions are not strictly controlled. The management interface could allow local attackers to gain unauthorized control of the OpenVPN instance.
+- [Risk Level] High
+'''
+'''
+- [Location] www/index.html
+- [Type] Component
+- [Version Info] 1.1.0+b3321bb2
+- [Description] Version information exposure in meta tag
+- [Details] The version number '1.1.0+b3321bb2' is exposed in the meta tag of the HTML file.
+- [Impact] Attackers could use this information to identify and exploit known vulnerabilities associated with this specific version.
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/ppp/options
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure configuration options detected in the PPP options file.
+- [Details] The file contains 'logfile /dev/null', which disables logging, and 'maxfail 0', allowing unlimited connection retries.
+- [Impact] Disabling logging removes audit trails, and allowing unlimited retries increases the risk of brute-force attacks.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/openvpn/server.conf
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] The OpenVPN management interface is bound to 127.0.0.1, limiting access to localhost. However, the use of a non-standard port (14) without additional authentication mechanisms could introduce risks if improperly configured or exposed externally.
+- [Details] The configuration file specifies the management interface binding to 127.0.0.1 on port 14. No further authentication mechanisms are evident in the provided configuration.
+- [Impact] If this interface is inadvertently exposed or misconfigured, unauthorized users could potentially interact with the OpenVPN management interface, leading to unauthorized control or information disclosure.
+- [Risk Level] Medium
+'''
+'''
+- [Location] lib/functions/preinit.sh
+- [Type] Component
+- [Version Info] BusyBox 1.36.1, CVE-2023-42366, CVE-2023-42365, CVE-2023-42364, CVE-2023-42363, CVE-2017-16544, CVE-2017-15874, CVE-2017-15873
+- [Description] Multiple vulnerabilities identified in BusyBox 1.36.1, including heap-buffer-overflow, use-after-free, improper sanitization, and integer underflow/overflow issues.
+- [Details] The script uses BusyBox 1.36.1, which is affected by several CVEs: CVE-2023-42366 (heap-buffer-overflow), CVE-2023-42365, CVE-2023-42364, CVE-2023-42363 (use-after-free), CVE-2017-16544 (improper sanitization in tab autocomplete), and CVE-2017-15874, CVE-2017-15873 (integer underflow/overflow).
+- [Impact] These vulnerabilities could allow remote code execution or denial of service, significantly compromising the firmware's security.
+- [Risk Level] Critical
+
+- [Location] lib/functions/uci-defaults.sh
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Potential sensitive data exposure due to password-related patterns found in the script.
+- [Details] The script contains variable assignments and logic resembling password handling (e.g., 'local key="$2"', 'json_add_boolean "$key"'). If used improperly, this could lead to exposure of sensitive credentials.
+- [Impact] Improper handling or storage of credentials could result in unauthorized access or data breaches.
+- [Risk Level] High
+'''
