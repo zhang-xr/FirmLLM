@@ -39,12 +39,5 @@
 | mac80211.ko | CVE-2014-8709, CVE-2014-2706 |
 | usbcore.ko | Spectre vulnerability (CVE-2019-15902) |
 
-## Major Security Issues
-
-### Configuration Issues
-- Exposed sensitive IPs and URLs in firewall config
-- Hardcoded DNS servers and NXDomain IPs
-- Insecure default configurations
-- Version information leakage
 
 
