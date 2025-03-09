@@ -543,7 +543,7 @@ Note: Only select functions from the provided list above. Do not include any oth
     except Exception as e:
         error_msg = f"Disassembly analysis error: {str(e)}"
         analysis_logger.error(f"[Disassembly] Failed: {error_msg}")
-        save_message_history(state, "disassembly", f"❌ {error_msg}")
+        save_message_history(state, "disassembly", f" {error_msg}")
         return json.dumps({
             "findings": "Analysis error",
             "severity": "0",
