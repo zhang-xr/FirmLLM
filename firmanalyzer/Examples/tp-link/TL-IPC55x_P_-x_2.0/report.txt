@@ -1,0 +1,737 @@
+'''
+- [Location] bin/busybox
+- [Type] Component
+- [Version Info] BusyBox 1.19.4, CVE-2019-5747, CVE-2021-28831, CVE-2018-20679, CVE-2017-16544, CVE-2017-15874, CVE-2017-15873, CVE-2016-6301, CVE-2016-2148, CVE-2016-2147, CVE-2011-2716
+- [Description] Outdated BusyBox version with multiple critical vulnerabilities.
+- [Details] The binary contains version strings indicating BusyBox 1.19.4. Identified vulnerabilities include remote code execution (e.g., CVE-2011-2716), heap-based buffer overflow (e.g., CVE-2016-2148), and arbitrary command execution via crafted DHCP messages.
+- [Impact] Potential for remote code execution, denial of service, and sensitive information exposure.
+- [Risk Level] Critical
+
+- [Location] bin/busybox
+- [Type] Other
+- [Version Info] N/A
+- [Description] Command injection vulnerabilities in multiple functions.
+- [Details] Functions fcn.0003ffb8 and fcn.000371b8 exhibit insecure handling of user-controlled inputs leading to direct calls to system/popen without sanitization.
+- [Impact] Arbitrary command execution via crafted input.
+- [Risk Level] Critical
+
+- [Location] bin/ipcd
+- [Type] Component
+- [Version Info] GCC 4.8.3, CVE-2018-12886
+- [Description] Outdated GCC version with stack protection bypass vulnerability.
+- [Details] The binary is compiled using GCC 4.8.3, which is affected by CVE-2018-12886 allowing attackers to bypass stack protection mechanisms on ARM targets.
+- [Impact] Potential for stack overflow exploitation and arbitrary code execution.
+- [Risk Level] High
+
+- [Location] bin/ipcd
+- [Type] Other
+- [Version Info] N/A
+- [Description] Buffer overflow and command injection vulnerabilities in disassembled functions.
+- [Details] Function fcn.0000b10c uses strcpy and system calls without input validation. Function fcn.0000abb0 uses system() with dynamically constructed strings.
+- [Impact] Arbitrary code execution and command injection risks.
+- [Risk Level] Critical
+
+- [Location] bin/cloud-client
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Hardcoded token and sensitive strings identified.
+- [Details] A hardcoded token ('token:1234567890abcdefghijklmnopqrstuv88') and sensitive strings such as URLs and API endpoints were found.
+- [Impact] Potential unauthorized access to cloud services or sensitive operations.
+- [Risk Level] High
+
+- [Location] bin/cloud-client
+- [Type] Component
+- [Version Info] BusyBox 1.36.1, CVE-2023-42366, CVE-2023-42365, CVE-2023-42364, CVE-2023-42363, CVE-2015-9261
+- [Description] Multiple critical vulnerabilities affecting BusyBox.
+- [Details] Identified CVEs include heap-buffer-overflow, use-after-free vulnerabilities, and pointer misuse issues.
+- [Impact] Remote code execution, denial of service, and application crashes.
+- [Risk Level] Critical
+
+- [Location] bin/dn_switch
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Exposure of version information and configuration file paths.
+- [Details] References to versioned configuration files (e.g., /lib/TL-IPC533-4.ini, /lib/TL-IPC453V1-2.8.ini) and embedded version strings were found.
+- [Impact] Assists attackers in identifying known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] bin/dn_switch
+- [Type] Component
+- [Version Info] BusyBox versions up to 1.0, CVE-2019-5747, CVE-2021-28831, CVE-2018-20679, CVE-2017-16544, CVE-2016-2148, CVE-2011-2716
+- [Description] Multiple critical and high severity CVEs affecting BusyBox.
+- [Details] Identified vulnerabilities include remote code execution, denial of service, and sensitive information exposure risks.
+- [Impact] Arbitrary code execution, denial of service, and sensitive information exposure.
+- [Risk Level] Critical
+
+- [Location] bin/dn_switch
+- [Type] Other
+- [Version Info] N/A
+- [Description] Critical vulnerabilities identified in disassembly.
+- [Details] Function fcn.00010144 allows command injection, and functions fcn.00010614 and fcn.0001074c expose format string vulnerabilities.
+- [Impact] Arbitrary code execution or memory corruption.
+- [Risk Level] Critical
+
+- [Location] bin/ubus
+- [Type] Other
+- [Version Info] N/A
+- [Description] Critical security issues identified in disassembly analysis.
+- [Details] Lack of input validation in blobmsg_format_json_with_cb, insecure handling of the program counter in sym.imp.__uClibc_main, and a format string vulnerability due to unsanitized use of a global variable in printf.
+- [Impact] Remote code execution or system compromise.
+- [Risk Level] Critical
+'''
+'''
+- [Location] bin/opkg
+- [Type] Component
+- [Version Info] Version prior to 2020-01-25, CVE-2020-7982
+- [Description] A vulnerability in the opkg package manager allows arbitrary package injection due to incorrect parsing of embedded checksums in signed repository indexes.
+- [Details] The binary contains functions fcn.0000d1a0 and fcn.00019c38 that use system() with unsanitized user input, leading to command injection vulnerabilities.
+- [Impact] Potential remote code execution via arbitrary package injection or command injection by an attacker.
+- [Risk Level] Critical
+
+- [Location] bin/login.sh
+- [Type] Configuration
+- [Version Info] Unknown, references outdated code from '2006-2011'
+- [Description] The script improperly handles authentication logic by checking /etc/shadow and /etc/passwd without proper hardening measures.
+- [Details] If both /etc/shadow and /etc/passwd lack a valid root entry and FAILSAFE is not set, the script exits with a login failure message.
+- [Impact] Potential authentication bypass or denial of service if sensitive files are manipulated.
+- [Risk Level] Medium
+
+- [Location] bin/onvif
+- [Type] Component
+- [Version Info] gSOAP version 2.8, affected by CVE-2021-21783, CVE-2017-9765, CVE-2020-13578, CVE-2020-13574
+- [Description] Multiple critical vulnerabilities identified in the gSOAP library, including RCE and DoS issues tied to SOAP request handling.
+- [Details] Disassembly reveals format string vulnerabilities via vprintf(), command injection through system(), and insecure handling of SOAP/XML requests.
+- [Impact] Remote code execution or denial of service attacks via crafted SOAP requests.
+- [Risk Level] Critical
+
+- [Location] bin/tddpd
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Private key file path detected at /etc/tddpd/priv-key.pem, indicating potential exposure of sensitive cryptographic material.
+- [Details] Binary references private key file explicitly, combined with unchecked memcpy operations, sprintf() without validation, and insecure recvfrom calls.
+- [Impact] Unauthorized access or cryptographic breaches if private key is exposed.
+- [Risk Level] Critical
+
+- [Location] bin/vda
+- [Type] Component
+- [Version Info] BusyBox versions up to 4.8.3, affected by CVE-2018-20679, CVE-2017-16544, CVE-2017-15874, CVE-2017-15873, CVE-2023-39810, CVE-2022-48174, CVE-2022-30065, CVE-2021-42386
+- [Description] Multiple critical and high-severity vulnerabilities affecting BusyBox, including directory traversal, stack overflow, and use-after-free issues.
+- [Details] Format string vulnerabilities propagated through multiple call chains, lack of modern exploit mitigations like ASLR, NX, and stack canaries.
+- [Impact] Arbitrary code execution, denial of service, or sensitive information disclosure.
+- [Risk Level] Critical
+
+- [Location] bin/wtd
+- [Type] Component
+- [Version Info] GCC 4.8.3, affected by CVE-2018-12886, CVE-2017-11671
+- [Description] Outdated compiler toolchain exposes binary to known vulnerabilities such as stack protector bypass and randomness issues.
+- [Details] Function fcn_0000987c uses popen and system with unchecked data propagation, leading to command injection risks.
+- [Impact] Potential remote code execution or reduced security in randomization mechanisms.
+- [Risk Level] High
+'''
+'''
+- [Location] sbin/netifd
+- [Type] Component
+- [Version Info] GCC 4.8.3, CVE-2018-12886, CVE-2017-11671
+- [Description] Critical vulnerabilities identified in function fcn.0000a67c including command injection, buffer overflow, and format string vulnerabilities.
+- [Details] Use of popen with unsanitized input allows command injection; insecure use of strcpy and gets allows buffer overflow; sprintf introduces format string vulnerabilities.
+- [Impact] Potential remote code execution or arbitrary code execution.
+- [Risk Level] Critical
+
+- [Location] sbin/ubusd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Critical vulnerabilities identified in multiple functions due to unvalidated strcpy, exploitable memcpy, and lack of stack protection mechanisms.
+- [Details] Unvalidated strcpy calls, memcpy with user-controllable size parameters, and lack of stack protection lead to memory corruption risks.
+- [Impact] Arbitrary memory corruption and potential remote code execution.
+- [Risk Level] Critical
+
+- [Location] sbin/checkipconflict
+- [Type] Script
+- [Version Info] Unknown
+- [Description] Command injection vulnerability due to unsanitized input parameter `$1`.
+- [Details] Direct usage of `$1` in the `arping` command without sanitization allows malicious input like `; malicious_command;`.
+- [Impact] Execution of arbitrary commands on the system.
+- [Risk Level] High
+
+- [Location] sbin/uci
+- [Type] Component
+- [Version Info] GCC 4.8.3, CVE-2018-12886
+- [Description] Version information exposure and critical vulnerabilities identified in disassembly analysis.
+- [Details] Lack of stack canaries, ASLR, NX; format string vulnerabilities via printf and fprintf without validation.
+- [Impact] Exploitation risks include arbitrary memory read/write or code execution.
+- [Risk Level] Critical
+
+- [Location] sbin/sysupgrade
+- [Type] Script
+- [Version Info] Unknown
+- [Description] Lack of firmware integrity verification mechanisms and insecure update process.
+- [Details] Accepts URL for firmware updates without validation or integrity checks; '--force' option bypasses image checks.
+- [Impact] Risk of flashing malicious or corrupted images.
+- [Risk Level] High
+
+- [Location] sbin/luci-reload
+- [Type] Script
+- [Version Info] Unknown
+- [Description] Potential command injection risk due to unchecked variables in shell commands.
+- [Details] Variables `$cmd` and `$@` used directly in shell execution contexts without sanitization.
+- [Impact] Arbitrary command execution if influenced by user input.
+- [Risk Level] High
+
+- [Location] sbin/wget2nand
+- [Type] Script
+- [Version Info] Unknown
+- [Description] User-provided URL without sanitization and sensitive information leakage.
+- [Details] No validation of input URL; email address exposed in comments.
+- [Impact] Unauthorized server access (e.g., SSRF) and social engineering attacks.
+- [Risk Level] Medium
+
+- [Location] sbin/wifi
+- [Type] Script
+- [Version Info] Unknown
+- [Description] Exposure of WEP key handling logic and weak encryption risks.
+- [Details] Processes WEP keys without strong validation; 'default' configuration may enable outdated protocols.
+- [Impact] Increased risk of insecure Wi-Fi configuration and attacks.
+- [Risk Level] Medium
+
+- [Location] sbin/hotplug2
+- [Type] Component
+- [Version Info] GCC 4.8.3, CVE-2018-12886, CVE-2017-11671
+- [Description] Critical security issues identified in disassembly analysis.
+- [Details] Lacks stack canaries, ASLR, NX bit enforcement; indirect invocation of sym.imp.system without input validation.
+- [Impact] Potential remote code execution and system compromise.
+- [Risk Level] Critical
+
+- [Location] sbin/mount_root
+- [Type] Component
+- [Version Info] BusyBox v1.36.1, CVE-2023-42366, CVE-2023-42365, CVE-2023-42364, CVE-2023-42363
+- [Description] Multiple CVEs affecting BusyBox v1.36.1 identified.
+- [Details] Use-after-free and heap-buffer-overflow vulnerabilities.
+- [Impact] Potential remote code execution or denial of service attacks.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/opkg.conf
+- [Type] Configuration
+- [Version Info] OpenWrt 12.09-rc1
+- [Description] Exposure of version information and repository URL.
+- [Details] The configuration file exposes the firmware version (OpenWrt 12.09-rc1) and repository URL, which could be used to identify known vulnerabilities.
+- [Impact] Attackers could use this information to target known vulnerabilities in the exposed version.
+- [Risk Level] Medium
+
+- [Location] etc/passwd
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Presence of default accounts with disabled passwords.
+- [Details] Default accounts `admin` and `guest` are present with disabled passwords (indicated by `*`).
+- [Impact] Potential security risk if these accounts are enabled or misconfigured during runtime.
+- [Risk Level] Medium
+
+- [Location] etc/diag.sh
+- [Type] Component
+- [Version Info] "2006-2009"
+- [Description] Exposure of outdated software component version.
+- [Details] The script contains the version string "2006-2009", indicating potentially outdated software.
+- [Impact] Could indicate the presence of outdated or vulnerable components.
+- [Risk Level] Medium
+
+- [Location] etc/group
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Excessive group permissions detected.
+- [Details] Multiple groups have potentially excessive or unnecessary permissions (e.g., "root:x:0:", "daemon:x:1:", "www-data:x:33:").
+- [Impact] Misconfiguration could lead to privilege escalation.
+- [Risk Level] High
+
+- [Location] etc/relayd.conf
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Potential exposure of a network endpoint using unencrypted HTTP.
+- [Details] Contains domain (relay-ipc.tplinkcloud.com.cn) and port (80), indicating unencrypted communication.
+- [Impact] Unencrypted communication increases the risk of data interception.
+- [Risk Level] Medium
+
+- [Location] etc/sysctl.conf
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Potentially insecure IPv6 forwarding and bridge firewalling settings.
+- [Details] IPv6 forwarding is globally enabled (net.ipv6.conf.all.forwarding=1), and bridge firewalling is disabled (net.bridge.bridge-nf-call-arptables=0, net.bridge.bridge-nf-call-ip6tables=0).
+- [Impact] Unintended network exposure and unfiltered traffic through the bridge.
+- [Risk Level] High
+
+- [Location] etc/hk_proto_config
+- [Type] Configuration
+- [Version Info] SoftwareVersion: V5.4.0build 160401, DSPVersion: V7.3 build 160401
+- [Description] Exposure of detailed version information and device details.
+- [Details] Contains software versions, device type, description, and MAC address. Also references password reset functionality.
+- [Impact] Allows attackers to identify known vulnerabilities or launch targeted attacks.
+- [Risk Level] Critical
+
+- [Location] etc/banner
+- [Type] Component
+- [Version Info] 'svn unknown'
+- [Description] Exposure of version information.
+- [Details] File contains exposed version information ('svn unknown').
+- [Impact] Helps attackers identify software version for targeting known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] etc/openwrt_release
+- [Type] Component
+- [Version Info] OpenWrt Attitude Adjustment 12.09-rc1
+- [Description] Exposure of firmware version details.
+- [Details] Exposes version details: OpenWrt Attitude Adjustment 12.09-rc1.
+- [Impact] Attackers could exploit known vulnerabilities associated with this version.
+- [Risk Level] Medium
+
+- [Location] etc/openwrt_version
+- [Type] Component
+- [Version Info] 12.09-rc1
+- [Description] Exposure of firmware version.
+- [Details] Exposes firmware version "12.09-rc1".
+- [Impact] Could be used to identify known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] etc/profile
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Potential unintended exposure of sensitive user information.
+- [Details] Script accesses /etc/passwd to set HOME variable, risking exposure of user account details.
+- [Impact] Risk of exposing sensitive user information if misused.
+- [Risk Level] Medium
+
+- [Location] etc/protocols
+- [Type] Component
+- [Version Info] IPv6 Hop-by-Hop Option [RFC1883], Internet Protocol version 6
+- [Description] Exposure of supported protocols and versions.
+- [Details] Contains references to IPv6 and related protocols with version information.
+- [Impact] Allows attackers to identify system's supported protocols and versions.
+- [Risk Level] Medium
+
+- [Location] etc/services
+- [Type] Configuration
+- [Version Info] dhcpv6-client/server, subversion (svn)
+- [Description] Exposure of unnecessary or insecure services.
+- [Details] Lists services like telnet (23/tcp), finger (79/tcp), chargen (19/tcp, 19/udp), and version-specific services like dhcpv6 and svn.
+- [Impact] Increases attack surface due to insecure or unnecessary services.
+- [Risk Level] High
+
+- [Location] etc/usr_conf_data
+- [Type] Component
+- [Version Info] "\V5("
+- [Description] Exposure of version information.
+- [Details] Version information detected: "\V5(".
+- [Impact] Indicates potential outdated software or associated vulnerabilities.
+- [Risk Level] Medium
+'''
+'''
+- [Location] etc/tddpd/priv-key.pem
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] RSA private key file detected with world-readable permissions and stored in plaintext.
+- [Details] The file has permissions set to -rwxr-xr-x, allowing all users to read the contents. The RSA private key is not encrypted, as indicated by the absence of "Proc-Type: 4,ENCRYPTED" in the PEM file.
+- [Impact] Unauthorized access to the private key could lead to misuse, such as unauthorized authentication or potential remote code execution.
+- [Risk Level] Critical
+'''
+'''
+- [Location] lib/ld-uClibc.so.0
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Format string vulnerability in sym._dl_map_cache function.
+- [Details] The function fails to validate format strings when calling sym._dl_dprintf, potentially allowing arbitrary code execution or privilege escalation. Call chain: sym._dl_get_ready_to_run -> sym._dl_map_cache -> sym._dl_dprintf.
+- [Impact] Remote code execution or privilege escalation.
+- [Risk Level] Critical
+
+- [Location] lib/libcyassl.so
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Buffer overflow vulnerability due to unchecked memcpy operations.
+- [Details] Function fcn.00007fb4 performs memcpy without bounds checking at addresses 0x8080, 0x80ac, and 0x82d8.
+- [Impact] Potential buffer overflow leading to arbitrary code execution or system compromise.
+- [Risk Level] Critical
+
+- [Location] lib/libcyassl.so.5
+- [Type] Component
+- [Version Info] CyaSSL 3.3.2, CVE-2014-2903, CVE-2014-2900, CVE-2014-2899, CVE-2014-2898, CVE-2014-2897, CVE-2014-2896
+- [Description] Multiple vulnerabilities including improper certificate validation and memory corruption.
+- [Details] Unchecked write operation in fcn.0000dd44 and insufficient validation in sym.CyaSSL_write.
+- [Impact] Spoofing, denial of service, or arbitrary code execution.
+- [Risk Level] Critical
+
+- [Location] lib/libcrypt.so.0
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Buffer overflow vulnerability due to misuse of memcpy.
+- [Details] Function fcn.00001aac uses memcpy without proper bounds checking.
+- [Impact] Privilege escalation and system compromise.
+- [Risk Level] Critical
+
+- [Location] lib/libevent-2.0.so.5
+- [Type] Component
+- [Version Info] libevent 2.0.21, CVE-2015-6525, CVE-2014-6272
+- [Description] Integer overflows in evbuffer API.
+- [Details] Heap-based buffer overflows or infinite loops via large inputs.
+- [Impact] Denial of service or other unspecified impacts.
+- [Risk Level] High
+
+- [Location] lib/libevent.so
+- [Type] Configuration
+- [Version Info] libevent-2.0.so.5
+- [Description] Hardcoded IP addresses found.
+- [Details] Presence of external IPs (1.2.3.4, 18.244.0.188) and localhost.
+- [Impact] Potential information exposure or unauthorized access.
+- [Risk Level] Medium
+
+- [Location] lib/libpng12.so.0
+- [Type] Component
+- [Version Info] libpng 1.2.56
+- [Description] Outdated version with known vulnerabilities.
+- [Details] Insecure memcpy operation in sym.png_read_end due to lack of input validation.
+- [Impact] Buffer overflow and potential remote code execution.
+- [Risk Level] Critical
+
+- [Location] lib/libqrencode.so
+- [Type] Component
+- [Version Info] '3.3.2', '4.8.3', '3.3'
+- [Description] Version information exposure.
+- [Details] Presence of version strings indicating potential outdated library.
+- [Impact] Targeted attacks based on known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] lib/libuci.so
+- [Type] Component
+- [Version Info] libuci < 19.07.5, CVE-2020-28951
+- [Description] Use after free vulnerability.
+- [Details] Functions fcn.000018d4 and fcn.000019e4 use strcpy without input validation.
+- [Impact] Memory corruption vulnerabilities.
+- [Risk Level] High
+
+- [Location] lib/libpthread-0.9.32.1.so
+- [Type] Component
+- [Version Info] uClibC 0.9.32.1, CVE-2022-29503
+- [Description] Memory corruption vulnerability in thread allocation.
+- [Details] Thread allocation can lead to memory corruption.
+- [Impact] Memory corruption.
+- [Risk Level] High
+
+- [Location] lib/libpthread.so.0
+- [Type] Component
+- [Version Info] GCC 4.4.1, uClibc 0.9.32.1, CVE-2022-30295, CVE-2021-43523, CVE-2017-9729, CVE-2017-9728, CVE-2016-6264, CVE-2018-12886, CVE-2017-11671, CVE-2015-5276, CVE-2008-1685, CVE-2008-1367, CVE-2006-3619, CVE-2006-1902
+- [Description] Multiple vulnerabilities affecting uClibc and GCC versions.
+- [Details] Lack of input validation and absence of stack protection mechanisms in sym.__pthread_getschedparam.
+- [Impact] DNS cache poisoning, domain hijacking, stack exhaustion, out-of-bounds read, integer signedness errors, stack protector bypass, incorrect handling of randomness, improper integer overflow checks, directory traversal.
+- [Risk Level] Critical
+
+- [Location] lib/TL-IPC555V2-6.ini
+- [Type] Configuration
+- [Version Info] "[3DNOISEV3]"
+- [Description] Version info exposure and insecure configuration.
+- [Details] Hardcoded compensation values and settings related to image processing.
+- [Impact] Misconfigurations could result in improper access control or denial of service.
+- [Risk Level] Medium
+
+- [Location] lib/functions.sh
+- [Type] Credential/Configuration
+- [Version Info] '2006'
+- [Description] Version information exposure and potential sensitive file operation.
+- [Details] Direct interactions with /etc/passwd and /etc/shadow, extensive use of eval for dynamic variable evaluation and export operations.
+- [Impact] Potential privilege escalation and code injection vulnerabilities.
+- [Risk Level] Critical
+'''
+'''
+- [Location] lib/libresolv-0.9.32.1.so
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1, CVE-2022-30295, CVE-2022-29503, CVE-2021-43523, CVE-2017-9729, CVE-2017-9728
+- [Description] Multiple vulnerabilities identified in the DNS resolver library.
+- [Details] Issues include predictable DNS transaction IDs (CVE-2022-30295), memory corruption in libpthread (CVE-2022-29503), improper handling of special characters in domain names (CVE-2021-43523), and regex-related vulnerabilities (CVE-2017-9729, CVE-2017-9728).
+- [Impact] Potential for DNS cache poisoning, memory corruption, domain hijacking, and remote code execution.
+- [Risk Level] Critical
+
+- [Location] lib/libutil-0.9.32.1.so
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1
+- [Description] Critical vulnerability in sym.openpty due to insecure use of strcpy.
+- [Details] The function entry0 calls sym.openpty, which uses strcpy without bounds checking, potentially exposing an external attack surface.
+- [Impact] Risk of remote code execution via buffer overflow.
+- [Risk Level] High
+
+- [Location] lib/libc.so.0
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1, CVE-2022-30295, CVE-2022-29503, CVE-2021-43523, CVE-2017-9729, CVE-2017-9728
+- [Description] Outdated version with multiple vulnerabilities.
+- [Details] Vulnerabilities include memory corruption, predictable DNS transaction IDs, improper validation of domain names, and regex-related issues. Presence of /etc/passwd and /etc/shadow paths indicates potential sensitive data exposure. memcpy used without input validation in sym.__uClibc_main.
+- [Impact] Remote code execution, DNS cache poisoning, unauthorized access to sensitive files.
+- [Risk Level] Critical
+
+- [Location] lib/libdl.so.0
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1, CVE-2022-29503, CVE-2017-9729, CVE-2017-9728
+- [Description] Multiple vulnerabilities affecting dynamic linking library.
+- [Details] Issues include memory corruption, stack exhaustion, and out-of-bounds reads.
+- [Impact] Memory corruption, application crashes, or denial of service.
+- [Risk Level] High
+
+- [Location] lib/libm.so.0
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1, CVE-2013-7039, CVE-2013-7038
+- [Description] Critical vulnerabilities in math library.
+- [Details] Identified CVEs indicate risks such as remote code execution and information disclosure.
+- [Impact] Potential remote code execution and sensitive data exposure.
+- [Risk Level] Critical
+
+- [Location] lib/libthread_db-0.9.32.1.so
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1
+- [Description] Critical security risks in functions fcn.00003360 and fcn.00003414.
+- [Details] Both functions involve unvalidated parameters passed to memcpy, creating buffer overflow risks. Stack canary protection is insufficient.
+- [Impact] Potential for remote code execution via buffer overflow.
+- [Risk Level] Critical
+
+- [Location] lib/librt-0.9.32.1.so
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1, CVE-2021-38604
+- [Description] Critical vulnerabilities in real-time library.
+- [Details] Buffer overflow in recv() call and NULL pointer dereference in mq_notify.c (CVE-2021-38604).
+- [Impact] Remote code execution or denial of service.
+- [Risk Level] Critical
+
+- [Location] lib/librt.so.0
+- [Type] Component
+- [Version Info] uClibc 0.9.32.1
+- [Description] Critical vulnerabilities in real-time library.
+- [Details] Buffer overflow in recv() call and unchecked memcpy operation in sym.mq_notify.
+- [Impact] Remote code execution or denial of service.
+- [Risk Level] Critical
+
+- [Location] lib/TL-IPC553V2-4.ini
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Version information exposure.
+- [Details] The string "[3DNOISEV3]" exposes version details.
+- [Impact] Helps attackers identify known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] lib/TL-IPC553V2-6.ini
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Version information exposure.
+- [Details] The string "[3DNOISEV3]" exposes version details.
+- [Impact] Helps attackers identify known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] lib/TL-IPC553V2-8.ini
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Version information exposure.
+- [Details] The string "[3DNOISEV3]" exposes version details.
+- [Impact] Helps attackers identify known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] lib/TL-IPC555V2-8.ini
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Version information exposure.
+- [Details] The string "[3DNOISEV3]" exposes version details.
+- [Impact] Helps attackers identify known vulnerabilities.
+- [Risk Level] Medium
+
+- [Location] lib/libdecrypter.so
+- [Type] Component/Credential
+- [Version Info] GCC 4.8.3, CVE-2018-12886, CVE-2017-11671
+- [Description] Exposure of version information and private key handling functions.
+- [Details] Contains version strings "4.8.3" and "20131202". Functions like 'RsaPrivateKeyDecode' and 'RsaPrivateDecrypt' suggest private key processing.
+- [Impact] Potential exposure of sensitive cryptographic operations and outdated software vulnerabilities.
+- [Risk Level] High
+
+- [Location] lib/libmsglog.so
+- [Type] Component
+- [Version Info] GCC 4.8.3, CVE-2018-12886, CVE-2017-11671, CVE-2015-5276
+- [Description] Exposure of version information and multiple vulnerabilities.
+- [Details] Version string "GCC 4.8.3 (Hisilicon_v300)" exposed. Known CVEs affect stack protection and random number generation.
+- [Impact] Potential bypass of stack protection mechanisms and reduced randomness.
+- [Risk Level] High
+
+- [Location] lib/libblobmsg_json.so
+- [Type] Component
+- [Version Info] GCC 4.8.3, CVE-2018-12886, CVE-2017-11671, CVE-2015-5276
+- [Description] Exposure of version information and critical vulnerabilities.
+- [Details] Version string "GCC: (Hisilicon_v300) 4.8.3 20131202" exposed. Insecure functions like sprintf and memcpy used without input validation.
+- [Impact] Potential remote code execution via buffer overflow.
+- [Risk Level] Critical
+
+- [Location] lib/libubus.so
+- [Type] Component
+- [Version Info] GCC 4.8.3, CVE-2018-12886
+- [Description] Exposure of version information and multiple critical vulnerabilities.
+- [Details] Version string "GCC 4.8.3 (Hisilicon_v300)" exposed. Format string vulnerability, unchecked memcpy, and use-after-free issues identified.
+- [Impact] Potential remote code execution or system compromise.
+- [Risk Level] Critical
+'''
+'''
+- [Location] etc/opkg.conf
+- [Type] Configuration
+- [Version Info] Firmware version: 12.09-rc1
+- [Description] Insecure repository configuration and version information exposure
+- [Details] The 'src/gz' line specifies an HTTP URL (http://downloads.openwrt.org/snapshots/trunk/ar71xx/packages/base), exposing the firmware version (12.09-rc1) and making package downloads susceptible to man-in-the-middle attacks.
+- [Impact] Attackers could exploit version-specific vulnerabilities or tamper with downloaded packages due to lack of encryption.
+- [Risk Level] High
+
+- [Location] etc/passwd
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Weak password hashing algorithm detected
+- [Details] Password hashes use the MD5-based $1$ hashing algorithm, which is considered weak and vulnerable to brute-force attacks.
+- [Impact] Increased risk of password cracking and unauthorized access.
+- [Risk Level] Medium
+
+- [Location] etc/shadow
+- [Type] Credential
+- [Version Info] N/A
+- [Description] Exposed user account structure
+- [Details] The file contains password hash fields marked with "x", indicating that actual hashes are stored elsewhere. No sensitive data such as plaintext passwords or keys are exposed.
+- [Impact] Knowledge of account structure could assist attackers in targeting specific accounts.
+- [Risk Level] Low
+
+- [Location] etc/relayd.conf
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Potential insecure network relay settings
+- [Details] The configuration file references a network endpoint (relay-ipc.tplinkcloud.com.cn:80), which may indicate insecure relay setup or exposure of internal network details.
+- [Impact] Possible unauthorized relay access or internal network exposure.
+- [Risk Level] Medium
+
+- [Location] etc/sysctl.conf
+- [Type] Configuration
+- [Version Info] N/A
+- [Description] Unintended enabling of IPv6 forwarding and bridge firewalling
+- [Details] 'net.ipv6.conf.all.forwarding=1' enables IPv6 forwarding, and 'net.bridge.bridge-nf-call-iptables=1' allows bridge traffic through iptables, potentially introducing unnecessary exposure.
+- [Impact] Risk of network-based attacks if these features are not explicitly required.
+- [Risk Level] Medium
+
+- [Location] etc/rc.common
+- [Type] Component
+- [Version Info] OpenWrt 2006-2012
+- [Description] Version information exposure
+- [Details] The script contains the copyright notice 'Copyright (C) 2006-2012 OpenWrt.org', exposing version-related information.
+- [Impact] Attackers could identify potentially vulnerable components based on known issues associated with specific versions.
+- [Risk Level] Medium
+
+- [Location] etc/services
+- [Type] Configuration
+- [Version Info] Includes dhcpv6-client, dhcpv6-server, icpv2, svn
+- [Description] Insecure service definitions and version information exposure
+- [Details] The file defines insecure or outdated protocols like telnet (23/tcp), ftp (20/tcp, 21/tcp), chargen (19/tcp, 19/udp), and exposes service versions such as dhcpv6-client and svn.
+- [Impact] Exposure of insecure services and version details increases the risk of targeted attacks.
+- [Risk Level] High
+'''
+'''
+- [Location] etc/init.d/uhttpd
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Potential exposure of key file paths used in cryptographic operations.
+- [Details] The script references a private key file (/etc/uhttpd.key) and certificate file (/etc/uhttpd.crt) for SSL/TLS without enforcing strict permission checks. If these files are improperly secured, it could lead to unauthorized access or decryption of sensitive data.
+- [Impact] Unauthorized access to cryptographic keys, potentially compromising encrypted communications.
+- [Risk Level] High
+
+- [Location] etc/init.d/uhttpd
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Lack of explicit verification of file permissions for critical cryptographic files.
+- [Details] The script does not verify file permissions for /etc/uhttpd.key and /etc/uhttpd.crt, which could allow unintended access if the files are world-readable or accessible by non-privileged users.
+- [Impact] Potential compromise of SSL/TLS security due to improper file permissions.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/ddns
+- [Type] Component
+- [Version Info] Version string: "2008-2012 OpenWrt.org"
+- [Description] Exposure of version information within the script.
+- [Details] The embedded version string "2008-2012 OpenWrt.org" could help attackers identify potential vulnerabilities.
+- [Impact] Increased risk of targeted attacks based on known vulnerabilities associated with the identified version.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/ddns
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Insecure default configuration using 'eth0' as the default WAN device.
+- [Details] The script uses 'eth0' as the default WAN interface if no WAN interface is detected, which could lead to misconfigurations.
+- [Impact] Misconfiguration risks leading to unexpected behavior or network exposure.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/firewall
+- [Type] Component
+- [Version Info] Version range: "2008-2010"
+- [Description] Use of outdated software component with potential known vulnerabilities.
+- [Details] The copyright notice indicates the script originates from 2008-2010, suggesting it may be outdated and vulnerable.
+- [Impact] Outdated components may have unpatched vulnerabilities that can be exploited.
+- [Risk Level] High
+
+- [Location] etc/init.d/netlinkd
+- [Type] Component
+- [Version Info] Version string: "2008-2011 OpenWrt.org"
+- [Description] Exposure of version information within the script.
+- [Details] The embedded version string "2008-2011 OpenWrt.org" could help attackers identify the firmware version and target known vulnerabilities.
+- [Impact] Increased risk of targeted attacks based on known vulnerabilities associated with the identified version.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/boot
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Presence of default credentials for hostname ('SLP') and timezone ('UTC').
+- [Details] Default values (hostname: 'SLP', timezone: 'UTC') are embedded in the script, which could lead to fingerprinting or unintended behavior if not properly configured.
+- [Impact] Misconfiguration risks leading to predictable system behavior or exploitation.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/boot
+- [Type] Other
+- [Version Info] Unknown
+- [Description] Unsafe use of 'killall' without strict parameter validation.
+- [Details] The script uses 'killall' without strict process name validation, which could inadvertently terminate unintended processes.
+- [Impact] Risk of disrupting critical system processes.
+- [Risk Level] Low
+
+- [Location] etc/init.d/cfgdev_info
+- [Type] Credential
+- [Version Info] Unknown
+- [Description] Hardcoded UUID used for device identification.
+- [Details] The hardcoded UUID '8857c040-49cb-4e6e-b0cd-2148cf3e07c2' is used as a device alias and could expose sensitive configuration details if misused.
+- [Impact] Potential unauthorized access or misuse if the UUID is exposed.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/cfgdev_info
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Lack of input sanitization for DEV_NAME and HW_VER.
+- [Details] The script uses 'uci set' to update device information without validating or sanitizing DEV_NAME and HW_VER, allowing potential command injection.
+- [Impact] Risk of altering device settings or executing arbitrary commands via injection.
+- [Risk Level] High
+
+- [Location] etc/init.d/cfgmac
+- [Type] Configuration
+- [Version Info] Unknown
+- [Description] Use of a hardcoded default MAC address.
+- [Details] The default MAC address (A8:57:4E:FD:93:5E) is used if no MAC address is found in flash, posing a risk of conflicts or misuse.
+- [Impact] Predictable MAC addresses could aid in spoofing or unauthorized network access.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/cloud_client
+- [Type] Component
+- [Version Info] Unknown
+- [Description] Use of insecure hashing algorithm (md5sum).
+- [Details] The script uses `md5sum` for checksum verification, which is cryptographically broken and vulnerable to hash collision attacks.
+- [Impact] Increased risk of hash collision vulnerabilities affecting integrity checks.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/miniupnpd
+- [Type] Component
+- [Version Info] Version range: "2006-2011"
+- [Description] Exposure of version information within the script.
+- [Details] The embedded version range '2006-2011' could help attackers identify potentially vulnerable components.
+- [Impact] Increased risk of targeted attacks based on known vulnerabilities associated with the identified version.
+- [Risk Level] Medium
+
+- [Location] etc/init.d/sysctl
+- [Type] Component
+- [Version Info] CVE-2025-21806
+- [Description] Vulnerability in sysctl related to 'net.core.dev_weight=0'.
+- [Details] Setting 'net.core.dev_weight=0' could cause system instability by triggering unintended behavior in the NAPI poll function.
+- [Impact] Denial of service through improper sysctl configuration.
+- [Risk Level] Medium
+'''
