@@ -761,15 +761,11 @@ def analyzer(state: FAgentState, graph, max_steps=30):
                         json.dump(result_data, f, ensure_ascii=False, indent=2)
                     analysis_logger.info(f"\n💾 [Result] {result_file}")
                     
-                except PermissionError:
-                    analysis_logger.error(f"\n❌ [Save] Failed: No write permission: {result_file}")
-                except OSError as e:
-                    analysis_logger.error(f"\n❌ [Save] Failed: Error creating directory or file: {str(e)}")
                 except Exception as e:
-                    analysis_logger.error(f"\n❌ [Save] Failed: Unknown error: {str(e)}")
+                    analysis_logger.error(f"\n [Save] Failed: Unknown error: {str(e)}")
                     
             except Exception as e:
-                analysis_logger.error(f"\n❌ [Save] Failed: {str(e)}")
+                analysis_logger.error(f"\n [Save] Failed: {str(e)}")
     
     return final_thought
 
