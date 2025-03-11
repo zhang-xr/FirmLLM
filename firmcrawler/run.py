@@ -9,9 +9,8 @@ from firmcrawler.crawler import browse
 
 # 实际运行效果示例：
 
-# 假设访问: https://example.com/products
+# 访问: https://example.com/products
 
-# 输出日志可能如下：
 # 开始爬取: https://example.com/products
 # 正在处理: https://example.com/products (深度: 0)
 # 发现分类页面: https://example.com/products

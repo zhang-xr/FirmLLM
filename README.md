@@ -6,12 +6,11 @@ FirmLLM is an integrated system that combines firmware collection and analysis f
 ## System Components
 
 ### 1. Firmware Collection System (FirmCrawler)
-
-`firmcrawler` is used for automated collection of firmware files from various manufacturers. The system is built upon and optimized from [WebVoyager](https://langchain-ai.github.io/langgraph/tutorials/web-navigation/web_voyager/) [[paper]](https://arxiv.org/abs/2401.13919), implementing a multi-agent collaboration system for large-scale firmware collection. WebVoyager is an innovative Large Multimodal Model (LMM) powered web agent that can complete user instructions end-to-end by interacting with real-world websites.
+`firmcrawler` is a multi-agent collaborative system for large-scale crawling, optimized from [WebVoyager](https://langchain-ai.github.io/langgraph/tutorials/web-navigation/web_voyager/) ([Paper](https://arxiv.org/abs/2401.13919)). Inheriting WebVoyager's core capabilities, it leverages a Large Multimodal Model (LMM) to achieve end-to-end web interaction tasks, including visual perception, natural language understanding, and sequential decision-making. Tailored for firmware collection scenarios, the system enhances webpage navigation strategies and data extraction logic.
 
 #### Main Features
-- Automated web interaction and downloads
-- Intelligent firmware information collection
+- Automated web interaction
+- Intelligent information collection
 - Multi-agent collaboration for parallel crawling
 - Distributed task scheduling
 
