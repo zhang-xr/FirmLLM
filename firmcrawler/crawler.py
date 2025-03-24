@@ -678,3 +678,41 @@ async def browse(url, system_prompt, user_input, save_path=None, max_steps=20, r
         
     return result
 
+if __name__ == "__main__":
+
+    import yaml
+    vendor = "ui"
+    url = "https://www.ui.com/download/releases/firmware"
+    task = "explorer"
+    save_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", f"{vendor}-{task}")    
+    logger = setup_logger(save_path)
+    logger.info(f"Starting crawler for {vendor}")
+    prompt_dir = os.path.dirname(os.path.abspath(__file__))
+
+    def load_prompts():
+        """Load prompts from YAML file"""
+        logger = logging.getLogger(f'{vendor}-crawler')
+        system_prompt_path = os.path.join(prompt_dir, "prompts",f'prompts.yaml')
+        user_prompt_path = os.path.join(prompt_dir, "prompts",f'{vendor}.yaml')
+        logger.info(f"Loading prompts from: {system_prompt_path}")
+        
+        try:
+            with open(system_prompt_path) as f:
+                system_prompts = yaml.safe_load(f)
+                logger.debug(f"Loaded {len(system_prompts)} prompt configurations")
+            with open(user_prompt_path) as f:
+                user_prompts = yaml.safe_load(f)
+                logger.debug(f"Loaded {len(user_prompts)} prompt configurations")
+                return system_prompts, user_prompts
+        except FileNotFoundError:
+            logger.error(f"Prompts file not found: {system_prompt_path}")
+            raise
+        except yaml.YAMLError as e:
+            logger.error(f"Error parsing prompts file: {e}")
+            raise
+
+    system_prompts, user_prompts = load_prompts()
+    system_prompt = system_prompts[task]['system']
+    user_prompt = user_prompts[task]['user']
+
+    asyncio.run(browse(url, system_prompt, user_prompt, save_path, max_steps=300, retain_human_messages=0, max_messages=10, headless=True))
