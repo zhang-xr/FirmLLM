@@ -39,7 +39,7 @@ FirmLLM is an integrated system that combines firmware collection and analysis f
   - CVE Query Tool: Support for API interface queries
   - Disassembly Assistant: Integration with radare2 and LLM
   - Sensitive Information Pattern Matching: Code pattern recognition based on regex and semantics
-
+- `requirements.yaml`: Analysis configuration file
 The requirements.yaml allows users to customize:
 - Analysis scope and target components
 - Directory scanning priorities
