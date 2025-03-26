@@ -40,10 +40,6 @@ FirmLLM is an integrated system that combines firmware collection and analysis f
   - Disassembly Assistant: Integration with radare2 and LLM
   - Sensitive Information Pattern Matching: Code pattern recognition based on regex and semantics
 - `requirements.yaml`: Analysis configuration file
-  - File Requirements: Defines target file types and components for analysis
-  - Directory Requirements: Specifies priority directories and analysis areas
-  - Analysis Requirements: Configures security analysis workflow and severity criteria
-  - Report Templates: Customizable templates for security reports and summaries
 
 The requirements.yaml allows users to customize:
 - Analysis scope and target components
