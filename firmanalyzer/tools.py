@@ -100,10 +100,18 @@ class BinaryAnalyzer:
             logging.error(f"Failed to execute strings: {str(e)}")
             return ""
 
-    def _safe_grep(self, pattern: str, data: str) -> List[str]:
+    def _safe_grep(self, pattern: str, data: str) -> List[Dict[str, str]]:
         try:
             compiled = re.compile(pattern)
-            return [m.group() for m in compiled.finditer(data)]
+            matches = []
+            for line in data.splitlines():
+                match = compiled.search(line)
+                if match:
+                    matches.append({
+                        'line': line,
+                        'match': match.group()
+                    })
+            return matches
         except re.error as e:
             logging.warning(f"Invalid regex pattern {pattern}: {str(e)}")
             return []
@@ -112,30 +120,38 @@ class BinaryAnalyzer:
         s_lower = s.lower()
         return any(fp in s_lower for fp in self._common_false_positives) or len(set(s)) < 4
 
-    def extract_versions(self) -> List[str]:
+    def extract_versions(self) -> List[Dict[str, str]]:
         versions = []
         strings_data = self._get_strings_output()
         
         for pattern in VERSION_PATTERNS:
             matches = self._safe_grep(pattern, strings_data)
             for ver in matches:
-                if len(ver) > 4 and not self._is_false_positive(ver):
+                if len(ver['match']) > 4 and not self._is_false_positive(ver['match']):
                     versions.append(ver)
         
-        return sorted(set(versions), key=len, reverse=True)
+        # 按匹配长度排序，并去重
+        unique_versions = []
+        seen_matches = set()
+        for v in sorted(versions, key=lambda x: len(x['match']), reverse=True):
+            if v['match'] not in seen_matches:
+                seen_matches.add(v['match'])
+                unique_versions.append(v)
+        
+        return unique_versions[:20]  # 限制返回数量
 
-    def analyze_sensitive_info(self) -> Dict[str, List[str]]:
+    def analyze_sensitive_info(self) -> Dict[str, List[Dict[str, str]]]:
         results = defaultdict(list)
         strings_data = self._get_strings_output()
         
         for info_type, pattern in SENSITIVE_PATTERNS.items():
             matches = self._safe_grep(pattern, strings_data)
-            filtered = [m for m in matches if not self._is_false_positive(m)]
+            filtered = [m for m in matches if not self._is_false_positive(m['match'])]
             
             if info_type == 'base64_data':
-                filtered = [s for s in filtered if self._validate_base64(s)]
+                filtered = [m for m in filtered if self._validate_base64(m['match'])]
             
-            results[info_type].extend(filtered[:50])
+            results[info_type].extend(filtered[:20])
 
         return dict(results)
 
@@ -248,3 +264,4 @@ class BinaryAnalyzer:
         except Exception as e:
             logging.warning(f"Hash calculation failed: {str(e)}")
             return ""
+

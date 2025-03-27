@@ -104,11 +104,12 @@ def format_file_description(state):
                 # Full binary analysis
                 bin_report = bin_analyzer.full_analysis()
                 
-                # Version information (backwards compatible)
+                # Version information (enhanced with context)
                 if bin_report.get('versions'):
                     file_info.append("\n[Potential Embedded Version Strings(Need to be identified)]")
-                    for ver in bin_report['versions'][:20]:
-                        file_info.append(f"- {ver}")
+                    for ver in bin_report['versions'][:10]:  # Limit to 10 entries
+                        file_info.append(f"- Match: {ver['match']}")
+                        file_info.append(f"  Context: {ver['line'][:80]}{'...' if len(ver['line'])>80 else ''}")
                 
                 # ELF section analysis
                 if bin_report.get('elf_sections'):
@@ -125,13 +126,23 @@ def format_file_description(state):
             for category, items in sensitive_results.items():
                 if items:
                     file_info.append(f"\n{category.upper()} ({len(items)} found):")
-                    for item in items[:10]:  # Show up to 10 items per category
-                        # Data masking
-                        sanitized = re.sub(r'(key|token|password)=[\w-]+', r'\1=******', item)
-                        truncated = sanitized[:75] + '...' if len(sanitized) > 75 else sanitized
-                        file_info.append(f"  - {truncated}")
-                    if len(items) > 10:
-                        file_info.append(f"  - ...and {len(items)-10} more")
+                    for item in items[:5]:  # Show up to 5 items per category
+                        # Display match and context
+                        match_text = item['match']
+                        context_text = item['line']
+                        
+                        # Data masking for sensitive information
+                        match_sanitized = re.sub(r'(key|token|password)=[\w-]+', r'\1=******', match_text)
+                        context_sanitized = re.sub(r'(key|token|password)=[\w-]+', r'\1=******', context_text)
+                        
+                        match_truncated = match_sanitized[:60] + '...' if len(match_sanitized) > 60 else match_sanitized
+                        context_truncated = context_sanitized[:80] + '...' if len(context_sanitized) > 80 else context_sanitized
+                        
+                        file_info.append(f"  - Match: {match_truncated}")
+                        file_info.append(f"    Context: {context_truncated}")
+                    
+                    if len(items) > 5:
+                        file_info.append(f"  - ...and {len(items)-5} more")
 
         file_info_str = "\n".join(file_info)
         analysis_logger.info(file_info_str)

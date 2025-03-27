@@ -29,7 +29,7 @@ import logging
 
 def get_api_key():
     config = configparser.ConfigParser()
-    config.read('./firmcrawler/config.ini')
+    config.read('config.ini')
     try:
         return config['Settings']['Model'], config['Settings']['ModelApiKey'], config['Settings']['OrgId'], config['Settings']['ProjectId'], config['Settings']['BaseURL']
     except KeyError:
