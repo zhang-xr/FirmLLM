@@ -30,7 +30,8 @@ The system consists of two main modules:
 
 ## 🕸️ Firmware Collection System (FirmCrawler)
 
-**FirmCrawler** is used for automated collection of firmware files from various manufacturers. The system is built upon and optimized from [WebVoyager](https://langchain-ai.github.io/langgraph/tutorials/web-navigation/web_voyager/) [[paper]](https://arxiv.org/abs/2401.13919), implementing a multi-agent collaboration system for large-scale firmware collection. WebVoyager is an innovative Large Multimodal Model (LMM) powered web agent that can complete user instructions end-to-end by interacting with real-world websites.
+**FirmCrawler** is used for automated collection of firmware files from various manufacturers. The system is built upon and optimized from [WebVoyager](https://langchain-ai.github.io/langgraph/tutorials/web-navigation/web_voyager/) [[paper]](https://arxiv.org/abs/2401.13919), implementing a multi-agent collaboration system for large-scale firmware collection. 
+WebVoyager is an innovative Large Multimodal Model (LMM) powered web agent that can complete user instructions end-to-end by interacting with real-world websites.
 
 ### 🔧 Key Features
 
@@ -92,7 +93,7 @@ Contains complete logs and reports from analyzing firmware using **DeepSeek-v3**
 ### 🤖 Model Performance Notes
 
 We primarily use **DeepSeek-v3** and **DeepSeek-r1** for firmware analysis.  
-However, **Claude-Sonnet-3.7** may demonstrates promising performance in code auditing tasks, especially for semantic reasoning and cross-file logic analysis.
+In addition, **Claude-Sonnet-3.7** may demonstrates promising performance in code auditing tasks, especially for semantic reasoning and cross-file logic analysis.
 DeepSeek offers lower costs, but we are actively experimenting and comparing results across multiple models to find the optimal configuration.
 
 ---
