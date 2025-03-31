@@ -12,7 +12,7 @@ FirmLLM is designed to **automate long-cycle analysis tasks** by leveraging mult
 
 The system consists of two main modules:
 
-- **FirmCrawler**: A multi-agent web crawler for automated firmware collection  
+- **FirmCrawler**: A multi-agent web crawler for automated firmware collection from online sources
 - **FirmAnalyzer**: A firmware security analysis engine that combines static tools and LLM capabilities
 
 ---
