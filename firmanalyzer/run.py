@@ -7,8 +7,8 @@ import subprocess
 import argparse
 import configparser
 from pathlib import Path
-from firmanalyzer.explore import explorer
-from firmanalyzer.LogManage import LogManager
+from explore import explorer
+from LogManage import LogManager
 
 
 def load_binwalk_path():
