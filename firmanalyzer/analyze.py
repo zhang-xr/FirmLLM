@@ -5,28 +5,23 @@ import json
 import logging
 import subprocess
 from typing import TypedDict, List, Optional, Tuple
-from langchain_core.messages import BaseMessage
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import BaseMessage, AIMessage, SystemMessage,HumanMessage
-import magic
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    MessagesPlaceholder,
-    SystemMessagePromptTemplate,
-)
+from langchain.prompts.chat import ChatPromptTemplate,MessagesPlaceholder,SystemMessagePromptTemplate
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
-from disassembly import R2Analyzer
-from R2decetor import R2VersionDetector
-from securityscan import SecurityScanner
-from CVEsearch import query_nvd_and_mitre
-from llm_config import LLMClient
-from callback import TokenUsageCallbackHandler
-from tools import BinaryAnalyzer
-from utils import check_real_permissions, parse_analysis_response
-from LogManage import LogManager
+from firmanalyzer.disassembly import R2Analyzer
+from firmanalyzer.securityscan import SecurityScanner
+from firmanalyzer.search import query_nvd_and_mitre
+from firmanalyzer.llm_config import LLMClient
+from firmanalyzer.callback import TokenUsageCallbackHandler
+from firmanalyzer.tools import BinaryAnalyzer
+from firmanalyzer.utils import check_real_permissions, parse_analysis_response
+from firmanalyzer.R2decetor import R2VersionDetector
+from firmanalyzer.LogManage import LogManager
 
 analysis_logger = LogManager.get_logger('Analyzer')
+
 
 llm_client = LLMClient()  # Use 'config.ini' by default
 
@@ -186,7 +181,8 @@ Only analyze this file, do not analyze other files, other files will be analyzed
 1. Basic analysis:
    - strings <file> | grep -i "pattern": Extract and filter strings in files
    - strings <file> | grep -iE "pattern": Use regular expressions to filter
-
+   - objdump -D <file> | grep "pattern": Search for specific function calls
+   
 2. Text search:
    - strings <file> | grep -n -A 3 -B 3 "pattern": Search with line numbers and context 
    
@@ -202,16 +198,33 @@ Only analyze this file, do not analyze other files, other files will be analyzed
    - readelf -h <file>  # Check ELF header info, available in most cases
 
 5. Vulnerability search:
-   - vulnsearch <name> <version>: Search for all related CVE vulnerabilities(one component per search)   Example: vulnsearch busybox 1.36.1
+   - vulnsearch <name> <version>: Search for all related CVE vulnerabilities(executable or shared library)   Example: vulnsearch busybox 1.36.1
     When analyzing results:
     - Only include CVEs where the vulnerable version range INCLUDES the target version
     - Exclude CVEs that affect versions BEFORE the target version
     - List all CVEs that affect the target version do not omit any
 
 6. Function analysis:
-   - disassembly <file>: Start disassembly mode to check for function calls (limited to one use,for executable and shared library you should use this tool)
-    Example: disassembly busybox
-
+   - disassembly <file>: Start disassembly mode to check for function calls (Limited to one use)   Example: disassembly busybox 
+   Use disassembly when the file meets the following criteria:
+   1. The file is an executable binary
+   2. The file has high-risk characteristics:
+      - Network service related (e.g. httpd, ftpd, sshd)
+      - System privileged programs (e.g. setuid/setgid binaries)
+      - Security critical components (e.g. authentication, encryption)
+      - Programs that process user input
+   3. Initial analysis reveals:
+      - Potential dangerous function usage
+      - Security sensitive strings
+      - Network related functionality
+      - Privileged operations
+   
+   Do NOT use disassembly for:
+   - Standard system utilities with limited functionality
+   - Non-executable files
+   - Files without security critical features
+   - Files that don't process external input
+   
 **Notes**
 1. Environment: Already in the directory of the file, execute commands directly, no need to change directory
 2. Analysis process: Execute one command at a time → Decide the next step based on context
@@ -312,6 +325,7 @@ def execute_shell(state: FAgentState) -> str:
             r"^file.*",
             r"^vulnsearch.*", 
             r"^disassembly.*",
+            r"^objdump.*",  # Add objdump command
             r"^\./[^/]+\s+(?:--version|-v|--help|-h)?$"
         ]
         
@@ -337,7 +351,7 @@ def execute_shell(state: FAgentState) -> str:
             ).decode('utf-8', errors='ignore')
             
             # If result exceeds threshold, switch to security scan mode
-            if len(result) > 8192:
+            if len(result) > 10240:
                 original_command = command
                 command = "security_scan"
                 analysis_logger.info("[Execute Shell] Result too long, switching to security scan mode")
@@ -496,13 +510,13 @@ Note: Only select functions from the provided list above. Do not include any oth
                 analyzer = R2Analyzer(
                     file_path, 
                     state['save_path'],
-                    max_analysis_count=4,
+                    max_analysis_count=10,
                     timeout_seconds=1800,
                     command_timeout=90,
-                    max_iterations=6,
+                    max_iterations=8,
                     target_functions=target_funcs # Pass target functions to analyzer
                 )
-                result = analyzer.analyze_binary()
+                result = analyzer.analyze_binary_parallel()
                 result_queue.put(result)
             except Exception as e:
                 result_queue.put(f"Error: {str(e)}")
@@ -554,7 +568,7 @@ Note: Only select functions from the provided list above. Do not include any oth
     except Exception as e:
         error_msg = f"Disassembly analysis error: {str(e)}"
         analysis_logger.error(f"[Disassembly] Failed: {error_msg}")
-        save_message_history(state, "disassembly", f" {error_msg}")
+        save_message_history(state, "disassembly", f"❌ {error_msg}")
         return json.dumps({
             "findings": "Analysis error",
             "severity": "0",
@@ -772,19 +786,63 @@ def analyzer(state: FAgentState, graph, max_steps=30):
                         json.dump(result_data, f, ensure_ascii=False, indent=2)
                     analysis_logger.info(f"\n💾 [Result] {result_file}")
                     
+                except PermissionError:
+                    analysis_logger.error(f"\n❌ [Save] Failed: No write permission: {result_file}")
+                except OSError as e:
+                    analysis_logger.error(f"\n❌ [Save] Failed: Error creating directory or file: {str(e)}")
                 except Exception as e:
-                    analysis_logger.error(f"\n [Save] Failed: Unknown error: {str(e)}")
+                    analysis_logger.error(f"\n❌ [Save] Failed: Unknown error: {str(e)}")
                     
             except Exception as e:
-                analysis_logger.error(f"\n [Save] Failed: {str(e)}")
+                analysis_logger.error(f"\n❌ [Save] Failed: {str(e)}")
     
     return final_thought
 
 
 
+if __name__ == "__main__":
+    # Configure root logger with same format
+    root_logger = logging.getLogger()
+    if not root_logger.handlers:  # Only add handler if none exists
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter('%(levelname)s %(name)s: %(message)s'))
+        root_logger.addHandler(handler)
+        root_logger.setLevel(logging.INFO)
+    else:
+    # Clear root logger handlers when imported as module
+        logging.getLogger().handlers = []
+    analysis_logger.info("[Start] Main program")
+    import os
+    import yaml
+    requirements_path = os.path.join(os.path.dirname(__file__), 'requirements.yaml')
+    try:
+        with open(requirements_path, encoding='utf-8') as f:
+            prompts = yaml.safe_load(f)
+            analysis_logger.debug("[Load] Requirements loaded successfully")
+    except Exception as e:
+        analysis_logger.error(f"[Error] Failed to load requirements: {e}")
+        raise
+    file_path = "/home/zxr/code/llm4firm/firmware/openwrt/fbecd0858ac36049e04bf9dd8acd3dd53fed97b4.bin.extracted/fbecd0858ac36049e04bf9dd8acd3dd53fed97b4.bin.extracted/1D0000/squashfs-root/bin/busybox"
+    initial_state: FAgentState = {
+        "input": prompts['file_findings_requirements']['user'],
+        "file": file_path,
+        "current_dir": os.path.dirname(file_path),
+        "response": {
+            "thought": "",
+            "command": "",
+            "status": ""
+        },
+        "scratchpad": [],
+        "observation": "",
+        "save_path": "./analysis_test",
+    }
 
-
-
-
+    analysis_logger.info("[Start] Initializing agent")
+    try:
+        final_analysis = analysis_graph.invoke(initial_state, {"recursion_limit": 30})
+        analysis_logger.info("[Analysis] Completed successfully")
+        analysis_logger.info(f"[Analysis] Final analysis: {final_analysis['response']['thought']}")
+    except Exception as e:
+        analysis_logger.error(f"[Error] Failed: {str(e)}")
 
 

@@ -1,19 +1,18 @@
 import r2pipe
 import cmd
 import httpx
+import queue
 import json
 import re
 import os
-import threading
-import time
-from functools import wraps
 import logging
+import threading
+from typing import List
+from functools import wraps
 from collections import defaultdict
-import queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from client import create_openai_client
-from typing import List, Optional
-import sys
+from firmanalyzer.client import create_openai_client
+
 
 class ThreadLogCollector:
     """Thread-safe log collector"""
@@ -372,14 +371,36 @@ class R2Analyzer(cmd.Cmd):
                     score += 1.5 * position_weight 
                 
                 patterns = {
-                    'main': 15.0,
-                    'init': 12.0,
-                    'handle': 10.0,
-                    'process': 8.0,
-                    'callback': 8.0,
-                    'recv': 12.0,
-                    'read': 10.0,
-                    'parse': 8.0
+                    'parse': 25.0,                 # 数据解析
+                    'json': 25.0,                  # JSON处理
+                    'xml': 25.0,                   # XML处理
+                    'config': 28.0,                # 配置处理
+                    
+                    # 入口点函数 (中高权重)
+                    'main': 35.0,                  # 主函数
+                    'init': 25.0,                  # 初始化函数
+                    'start': 25.0,                 # 启动函数
+                    
+                    # 处理器函数 (中等权重)
+                    'handler': 22.0,               # 处理器函数
+                    'process': 20.0,               # 处理函数
+                    'handle': 22.0,                # 处理函数
+                    'callback': 18.0,              # 回调函数
+                    
+                    # 输入处理 (高权重)
+                    'input': 30.0,                 # 输入处理
+                    'get': 25.0,                   # 获取数据
+                    'post': 25.0,                  # 提交数据
+                    'request': 25.0,               # 请求处理
+                    'response': 20.0,              # 响应处理
+                    
+                    # 文件操作 (中等权重)
+                    'file': 18.0,                  # 文件操作
+                    'upload': 28.0,                # 文件上传 (高风险)
+                    'download': 25.0,              # 文件下载
+                    'read': 18.0,                  # 读取操作
+                    'write': 20.0,                 # 写入操作
+                    
                 }
                 
                 for pattern, weight in patterns.items():
@@ -494,6 +515,7 @@ class R2Analyzer(cmd.Cmd):
                     result = function_results[result_key]
                     
                     try:
+                        # 获取调用链
                         chains = []
                         visited = set()
                         
@@ -504,20 +526,26 @@ class R2Analyzer(cmd.Cmd):
                                 current_addr: 当前分析的函数地址
                                 current_chain: 当前构建的调用链
                             """
+                            # 首先检查是否已经在当前调用链中
                             if any(func.get('offset') == current_addr for func in current_chain):
                                 return
+                            
+                            # 获取函数信息
                             func_info = self.r2.cmdj(f'afij @ {current_addr}')
                             if not func_info or not func_info[0]:
                                 return
                             
+                            # 添加当前函数到调用链
                             new_chain = current_chain + [func_info[0]]
                             
+                            # 获取引用此函数的地址
                             refs = self.r2.cmdj(f'axtj @ {current_addr}') or []
                             
                             if not refs:
-
+                                # 如果没有更多引用，说明到达了可能的入口点
                                 chains.append(new_chain)
                             else:
+                                # 继续构建调用链
                                 for ref in refs:
                                     ref_addr = ref.get('from')
                                     if ref_addr and ref_addr not in visited:
@@ -525,13 +553,16 @@ class R2Analyzer(cmd.Cmd):
                                         build_chain(ref_addr, new_chain)
                                         visited.remove(ref_addr)
                         
+                        # 构建调用链
                         build_chain(caller_addr, [])
                         
+                        # 去重和评分
                         unique_chains = self._remove_duplicate_chains(chains)
                         
+                        # 计算每条链的分数
                         for chain in unique_chains:
                             score = self._score_call_chain(chain, result['dangerous_function'])
-
+                            # 只保留高分调用链
                             if score > result['risk_score']:
                                 result['risk_score'] = score
                                 if chain not in result['call_chains']:
@@ -541,10 +572,11 @@ class R2Analyzer(cmd.Cmd):
                         self.disassembly_logger.error(f"[Chain] Error building call chains for {caller_func}: {str(e)}")
                         continue
             
+            # 转换结果为列表并排序
             results = list(function_results.values())
             results.sort(key=lambda x: x['risk_score'], reverse=True)
             
-
+            # 对每个结果限制调用链数量（保留最高分的10条）
             for result in results:
                 result['call_chains'] = result['call_chains'][:10]
             
@@ -850,18 +882,18 @@ Binaries extracted from firmware images may have structural issues:
                 })
 
     def parse_llm_response(self, response: str) -> dict:
-
+        """解析 LLM 响应，使用正则表达式提取JSON"""
         self.disassembly_logger.info(f"[Parser] {response}")
         try:
-
+            # 使用正则表达式匹配JSON内容
             json_pattern = r'```(?:json)?\s*(\{.*?\})\s*```'
             matches = re.findall(json_pattern, response, re.DOTALL)
             
             if matches:
-
+                # 使用找到的最后一个JSON (通常是最完整的)
                 json_str = matches[-1].strip()
             else:
-
+                # 如果没找到代码块,尝试直接解析整个响应
                 json_str = response.strip()
             
             result = json.loads(json_str)
@@ -874,14 +906,14 @@ Binaries extracted from firmware images may have structural issues:
             error_msg = f"Parsing error: {str(e)}\nOriginal response: {response}..."
             self.disassembly_logger.error(f"[Parser] {error_msg}")
             
-
+            # 返回一个带有命令的错误响应,这样可以触发下一轮对话
             return {
                 "analysis": {
                     "risk_level": "Unknown",
                     "reason": error_msg,
                     "next_step": "Please provide your response in valid JSON format."
                 },
-                "commands": "None",  
+                "commands": "None",  # 使用None作为命令,这样会被验证通过
                 "status": "continue"
             }
         
@@ -903,7 +935,7 @@ Binaries extracted from firmware images may have structural issues:
             
             try:
                 result = result_queue.get(timeout=timeout)
-
+                # 直接记录完整的命令执行结果
                 self.disassembly_logger.info(f"[Command] {cmd}")
                 self.disassembly_logger.info(f"[Result]\n{result}")
                 return result
@@ -1120,6 +1152,7 @@ Notice:
                 if 'local_message_history' in locals():
                     local_message_history.clear()
 
+            # 分析完成后写入日志
             self.write_analysis_logs(ref['function'], thread_id)
             return last_analysis
 
@@ -1150,6 +1183,7 @@ Notice:
                 self.disassembly_logger.warning("[!] No call chains found")
                 return "[]"
             
+            # 限制分析数量
             if len(call_chain_results) > self.MAX_ANALYSIS_COUNT:
                 self.disassembly_logger.info(f"[Analysis] Found total {len(call_chain_results)} call chains")
                 self.disassembly_logger.warning(f"[!] Limiting analysis to the top {self.MAX_ANALYSIS_COUNT} highest risk chains")
@@ -1158,6 +1192,7 @@ Notice:
             all_results = []
             analyzed_chains = 0
             
+            # 分析每个调用链
             for chain_result in call_chain_results:
                 if analyzed_chains >= self.MAX_ANALYSIS_COUNT:
                     break
@@ -1185,12 +1220,14 @@ Notice:
                     )
                     continue
 
+            # 保存完整结果
             if all_results and self.save_path:
                 self._save_final_results(all_results)
             
+            # 过滤出高风险结果
             filtered_results = [
                 result for result in all_results
-                if result.get('risk_level', '').upper() in ['CRITICAL']
+                if result.get('risk_level', '').upper() in ['CRITICAL', 'HIGH']
             ]
             
             return json.dumps(filtered_results, ensure_ascii=False, indent=2)
@@ -1213,6 +1250,7 @@ Notice:
             os.makedirs(self.save_path, exist_ok=True)
             result_file = os.path.join(self.save_path, 'disassembly.json')
             
+            # 展平嵌套的结果列表
             flattened_results = []
             for result_group in results:
                 if isinstance(result_group, list):
@@ -1220,6 +1258,7 @@ Notice:
                 else:
                     flattened_results.append(result_group)
             
+            # 简化结果结构
             simplified_results = []
             for result in flattened_results:
                 simplified_result = {
@@ -1260,12 +1299,15 @@ Notice:
                 self.disassembly_logger.warning("[!] No call chains found")
                 return "[]"
             
+            # 限制分析数量
             if len(call_chain_results) > self.MAX_ANALYSIS_COUNT:
                 self.disassembly_logger.info(f"[Analysis] Found total {len(call_chain_results)} call chains")
                 self.disassembly_logger.warning(f"[!] Limiting analysis to the top {self.MAX_ANALYSIS_COUNT} highest risk chains")
                 call_chain_results = call_chain_results[:self.MAX_ANALYSIS_COUNT]
             
+            # 创建线程池
             with ThreadPoolExecutor(max_workers=min(os.cpu_count(), 4)) as executor:
+                # 准备任务列表
                 analysis_tasks = []
                 for chain_result in call_chain_results:
                     analysis_params = {
@@ -1278,6 +1320,7 @@ Notice:
                     task = executor.submit(self.analyze_function_risk, analysis_params)
                     analysis_tasks.append(task)
                 
+                # 收集结果
                 all_results = []
                 for future in as_completed(analysis_tasks):
                     try:
@@ -1288,10 +1331,12 @@ Notice:
                         self.disassembly_logger.error(f"[Run] Error in parallel analysis task: {str(e)}")
                         continue
             
+            # 保存完整结果
             if all_results and self.save_path:
                 with self.r2_lock:
                     self._save_final_results(all_results)
             
+            # 过滤出高风险结果
             filtered_results = [
                 result for result in all_results
                 if result.get('risk_level', '').upper() in ['CRITICAL', 'HIGH']
@@ -1308,6 +1353,249 @@ Notice:
             self.disassembly_logger.error(f"[Run] Error during parallel analysis: {str(e)}")
             return "[]"
 
+def test_binary_analysis(binary_path: str, save_path: str = "test_results") -> bool:
+    """Test binary analysis functionality
+    
+    Args:
+        binary_path: Path to test binary
+        save_path: Path to save test results
+        
+    Returns:
+        bool: True if all tests pass
+    """
+    try:
+        # Initialize logger for testing
+        test_logger = get_logger('R2Test', save_path)
+        test_logger.info("[Test] Starting binary analysis test")
+        
+        # Test configuration
+        test_config = {
+            'max_analysis_count': 3,
+            'timeout_seconds': 600,
+            'command_timeout': 30,
+            'max_iterations': 3,
+            'find_dangerous_timeout': 300
+        }
+        
+        # Initialize analyzer
+        test_logger.info("[Test] Initializing R2Analyzer")
+        analyzer = R2Analyzer(
+            binary_path=binary_path,
+            save_path=save_path,
+            **test_config
+        )
+        
+        # Test components
+        test_results = {
+            'init': False,
+            'dangerous_funcs': False,
+            'call_chains': False,
+            'full_analysis': False
+        }
+        
+        # Test 1: Check initialization
+        try:
+            test_logger.info("[Test] Testing initialization")
+            if analyzer.r2 and analyzer.base_addr is not None:
+                test_results['init'] = True
+                test_logger.info("[Test] ✓ Initialization successful")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Initialization failed: {str(e)}")
+            return False
+            
+        # Test 2: Find dangerous functions
+        try:
+            test_logger.info("[Test] Testing dangerous function detection")
+            dangerous_refs = analyzer.find_dangerous_functions()
+            if isinstance(dangerous_refs, list):
+                test_results['dangerous_funcs'] = True
+                test_logger.info(f"[Test] ✓ Found {len(dangerous_refs)} dangerous function references")
+                
+                # Log found functions
+                for ref in dangerous_refs[:3]:  # Log first 3 for brevity
+                    test_logger.info(
+                        f"Found: {ref['function']} @ {hex(ref['address'])} "
+                        f"with {len(ref['dangerous_calls'])} dangerous calls"
+                    )
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Dangerous function detection failed: {str(e)}")
+            
+        # Test 3: Call chain analysis
+        if test_results['dangerous_funcs'] and dangerous_refs:
+            try:
+                test_logger.info("[Test] Testing call chain analysis")
+                call_chains = analyzer.find_complete_call_chains(dangerous_refs)
+                if isinstance(call_chains, list):
+                    test_results['call_chains'] = True
+                    test_logger.info(f"[Test] ✓ Found {len(call_chains)} call chains")
+                    
+                    # Log sample chains
+                    for chain in call_chains[:2]:  # Log first 2 chains
+                        test_logger.info(
+                            f"Chain for {chain['dangerous_function']}: "
+                            f"Risk score: {chain['risk_score']}"
+                        )
+            except Exception as e:
+                test_logger.error(f"[Test] ✗ Call chain analysis failed: {str(e)}")
+        
+        # Test 4: Full analysis
+        try:
+            test_logger.info("[Test] Testing full binary analysis")
+            results = analyzer.analyze_binary()
+            if results and results != "[]":
+                test_results['full_analysis'] = True
+                test_logger.info("[Test] ✓ Full analysis completed successfully")
+                
+                # Parse and log results
+                parsed_results = json.loads(results)
+                test_logger.info(f"[Test] Found {len(parsed_results)} high-risk results")
+                
+                # Log sample results
+                for result in parsed_results[:2]:  # Log first 2 results
+                    test_logger.info(
+                        f"Risk Level: {result.get('risk_level')} "
+                        f"Function: {result.get('function')}"
+                    )
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Full analysis failed: {str(e)}")
+        
+        # Calculate test coverage
+        passed_tests = sum(test_results.values())
+        total_tests = len(test_results)
+        coverage = (passed_tests / total_tests) * 100
+        
+        # Log test summary
+        test_logger.info("\n=== Test Summary ===")
+        test_logger.info(f"Total Tests: {total_tests}")
+        test_logger.info(f"Passed Tests: {passed_tests}")
+        test_logger.info(f"Coverage: {coverage:.2f}%")
+        for test_name, result in test_results.items():
+            test_logger.info(f"{test_name}: {'✓' if result else '✗'}")
+        
+        # Clean up
+        analyzer.r2.quit()
+        
+        return all(test_results.values())
+        
+    except Exception as e:
+        if 'test_logger' in locals():
+            test_logger.error(f"[Test] Critical test failure: {str(e)}")
+        return False
+
+def test_parallel_analysis(binary_path: str, save_path: str = "parallel_results") -> bool:
+    """Test parallel binary analysis functionality"""
+    try:
+        # 初始化测试日志
+        test_logger = get_logger('R2Test', save_path)
+        
+        # 添加控制台处理器用于测试输出
+        console_handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        console_handler.setFormatter(formatter)
+        test_logger.addHandler(console_handler)
+        
+        test_logger.info("[Test] Starting parallel analysis test")
+        
+        # 测试配置
+        test_config = {
+            'max_analysis_count': 5,  # 增加分析数量以测试并发
+            'timeout_seconds': 600,
+            'command_timeout': 30,
+            'max_iterations': 3,
+            'find_dangerous_timeout': 300
+        }
+        
+        # 初始化分析器
+        test_logger.info("[Test] Initializing R2Analyzer")
+        analyzer = R2Analyzer(
+            binary_path=binary_path,
+            save_path=save_path,
+            **test_config
+        )
+        
+        # 测试组件
+        test_results = {
+            'init': False,
+            'parallel_analysis': False,
+            'log_collection': False,
+            'thread_safety': False
+        }
+        
+        # 测试1: 检查初始化
+        try:
+            if analyzer.r2 and analyzer.base_addr is not None:
+                test_results['init'] = True
+                test_logger.info("[Test] ✓ Initialization successful")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Initialization failed: {str(e)}")
+            return False
+        
+        # 测试2: 并发分析
+        try:
+            test_logger.info("[Test] Testing parallel analysis")
+            results = analyzer.analyze_binary_parallel()
+            parsed_results = json.loads(results)
+            
+            if isinstance(parsed_results, list):
+                test_results['parallel_analysis'] = True
+                test_logger.info(f"[Test] ✓ Parallel analysis completed with {len(parsed_results)} results")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Parallel analysis failed: {str(e)}")
+        
+        # 测试3: 日志收集
+        try:
+            test_logger.info("[Test] Testing log collection")
+            log_file = os.path.join(save_path, 'disassembly.log')
+            if os.path.exists(log_file):
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    log_content = f.read()
+                
+                # 检查日志格式和完整性
+                if "=== Analysis for" in log_content and "=== End of Analysis ===" in log_content:
+                    test_results['log_collection'] = True
+                    test_logger.info("[Test] ✓ Log collection working correctly")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Log collection test failed: {str(e)}")
+        
+        # 测试4: 线程安全
+        try:
+            test_logger.info("[Test] Testing thread safety")
+            # 检查日志中的分析块是否完整
+            with open(log_file, 'r', encoding='utf-8') as f:
+                log_content = f.read()
+            
+            # 统计分析块的开始和结束标记数量
+            start_markers = log_content.count("=== Analysis for")
+            end_markers = log_content.count("=== End of Analysis ===")
+            
+            if start_markers == end_markers and start_markers > 0:
+                test_results['thread_safety'] = True
+                test_logger.info("[Test] ✓ Thread safety verified")
+        except Exception as e:
+            test_logger.error(f"[Test] ✗ Thread safety test failed: {str(e)}")
+        
+        # 计算测试覆盖率
+        passed_tests = sum(test_results.values())
+        total_tests = len(test_results)
+        coverage = (passed_tests / total_tests) * 100
+        
+        # 输出测试总结
+        test_logger.info("\n=== Test Summary ===")
+        test_logger.info(f"Total Tests: {total_tests}")
+        test_logger.info(f"Passed Tests: {passed_tests}")
+        test_logger.info(f"Coverage: {coverage:.2f}%")
+        for test_name, result in test_results.items():
+            test_logger.info(f"{test_name}: {'✓' if result else '✗'}")
+        
+        # 清理
+        analyzer.r2.quit()
+        
+        return all(test_results.values())
+        
+    except Exception as e:
+        if 'test_logger' in locals():
+            test_logger.error(f"[Test] Critical test failure: {str(e)}")
+        return False
 
 
 
