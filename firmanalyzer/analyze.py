@@ -10,15 +10,15 @@ from langchain_core.messages import BaseMessage, AIMessage, SystemMessage,HumanM
 from langchain.prompts.chat import ChatPromptTemplate,MessagesPlaceholder,SystemMessagePromptTemplate
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
-from firmanalyzer.disassembly import R2Analyzer
+from disassembly import R2Analyzer
 from firmanalyzer.securityscan import SecurityScanner
-from firmanalyzer.search import query_nvd_and_mitre
-from firmanalyzer.llm_config import LLMClient
-from firmanalyzer.callback import TokenUsageCallbackHandler
-from firmanalyzer.tools import BinaryAnalyzer
-from firmanalyzer.utils import check_real_permissions, parse_analysis_response
-from firmanalyzer.R2decetor import R2VersionDetector
-from firmanalyzer.LogManage import LogManager
+from CVEsearch import query_nvd_and_mitre
+from llm_config import LLMClient
+from callback import TokenUsageCallbackHandler
+from tools import BinaryAnalyzer
+from utils import check_real_permissions, parse_analysis_response
+from R2decetor import R2VersionDetector
+from LogManage import LogManager
 
 analysis_logger = LogManager.get_logger('Analyzer')
 

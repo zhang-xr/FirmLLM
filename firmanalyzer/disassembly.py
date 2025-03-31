@@ -11,7 +11,7 @@ from typing import List
 from functools import wraps
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from firmanalyzer.client import create_openai_client
+from client import create_openai_client
 
 
 class ThreadLogCollector:
