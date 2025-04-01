@@ -79,8 +79,9 @@ def list_dir(current_dir):
                     if entry.is_dir(follow_symlinks=False):
                         try:
                             with os.scandir(entry.path) as sub_entries:
-                                next(sub_entries, None)
-                                sub_dirs.append(entry.path)
+                                first_entry = next(sub_entries, None)
+                                if first_entry is not None:
+                                    sub_dirs.append(entry.path)
                         except (PermissionError, Exception):
                             continue
                         continue

@@ -11,7 +11,7 @@ from typing import List
 from functools import wraps
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from client import create_openai_client
+from firmanalyzer.client import create_openai_client
 
 
 class ThreadLogCollector:
@@ -595,7 +595,7 @@ class R2Analyzer(cmd.Cmd):
 1. Analysis Initialization
    ```
    You are a firmware binary security analysis expert. Your task is to analyze binary security using r2 commands.The current analysis is within the radare2 (r2) environment, and only r2 built-in commands are allowed.
-   For each reply, return a single JSON object with format:
+   For each reply, return  only a single JSON object with format:
    ```
     {
     "analysis": {
@@ -622,7 +622,7 @@ Optional Parameters:
 a. Function Analysis Commands
 -------------------------
 Primary Analysis:
-- pdd @ <hex_addr>   # Decompile function
+- pdg @ <hex_addr>   # Decompile function
 - pdf @ <hex_addr>   # Print disassembly 
 - afb @ <hex_addr>   # Analyze basic blocks
 
@@ -630,126 +630,62 @@ Variable & Reference Analysis:
 - afvd @ <hex_addr>  # Analyze variables 
 - afcf @ <hex_addr>  # View call graph 
 - axt @ <hex_addr>  # View cross references 
-- axtj @ <hex_addr> # Cross references in JSON 
 
 b. Basic Information Commands
 -------------------------
 Quick Info:
-- aflm @ <hex_addr>  # List local variables
-- afll @ <hex_addr>  # List loop information
-- pds @ <hex_addr>   # View string constants
 - af @ <hex_addr>    # Analyze function
 - afi @ <hex_addr>   # Get basic function info
 
 c. Command Syntax Examples
 -------------------------
 Valid Examples:
-✓ pdd @ 0x4005a0           # Basic usage with default limit
-✓ pdd @ 0x4005a0 ~100     # Custom limit of 100 lines
-✓ pdd @ 0x4005a0 ~50 @50  # Show lines 50-100
+✓ pdg @ 0x4005a0           # Basic usage with default limit
 
 Invalid Examples:
- pdd @ 4005a0     # Error: missing 0x prefix
- pdd @ 0x        # Error: incomplete address
- pdd             # Error: missing address
- pdd @ sys.upnpdev_main   # Error: invalid hex
+ pdg @ 4005a0     # Error: missing 0x prefix
+ pdg @ 0x        # Error: incomplete address
+ pdg             # Error: missing address
+ pdg @ sys.upnpdev_main   # Error: invalid hex
 
----
-## 2. Command Usage Rules
-
-### Required Parameters:
-- `<hex_addr>`: Must start with '0x', e.g., `0x4005a0`
-
-### a. Function Analysis
-- `pdf @ <hex_addr>`: Disassembly of function
-- `pdd @ <hex_addr>`: Decompile function
-- `afb @ <hex_addr>`: Analyze basic blocks
-- `afi @ <hex_addr>`: Function metadata
-- `af @ <hex_addr>`: Analyze function
-- `afcf @ <hex_addr>`: View call graph
-- `afvd @ <hex_addr>`: View local variables
-- `axtj @ <hex_addr>`: Cross references (JSON)
-
-### b. Structure & Data
-- `pds @ <hex_addr>`: View string constants
-- `aflm @ <hex_addr>`: View local memory layout
-- `afll @ <hex_addr>`: View loop structures
-
-### c. Syntax Examples
-    pdd @ 4005a0     # Error: missing 0x prefix
-    pdd @ 0x        # Error: incomplete address
-    pdd             # Error: missing address
-    pdd @ sys.upnpdev_main   # Error: invalid hex
 ---
 
 ## 3. Risk Evaluation Criteria
 
 ### A. Critical
-- Direct external input
-- Full parameter control
-- Dangerous sink call (e.g., system, strcpy)
-- No protection mechanisms
-- System-level consequence
-
-### B. High
-- Indirect input
-- Partial control
-- Weak or bypassable protection
-- App-level consequence
-
-### C. Medium
-- Controlled but filtered input
-- Some boundaries enforced
-- Moderate impact
-
-### D. Low
-- Difficult to reach
-- Internal use only
-- Strong checks present
-
-### E. Unknown
-- Incomplete analysis
-- Insufficient evidence
-
----
-
-## 4. Risk Elevation Checklist (for Critical)
-
-A finding can only be marked as `"risk_level": "Critical"` if **all** of the following are true:
-
 - Input is externally controllable
 - Input reaches a dangerous function (e.g., system, sprintf)
 - Input is not sanitized
 - Protection (bounds check, canary, ASLR, etc.) is missing
 - The full taint path is confirmed
 
+### B. High
+- Indirect input
+- Partial control
+- Weak or bypassable protection
+
+### C. Other (Medium | Low | Unknown)
+- Controlled input with filtering
+- Internal use only or difficult to reach
+- Strong checks present
+- Incomplete analysis or insufficient evidence
+- Moderate or low impact
+
 If any item is missing or unclear, **risk_level must be "High" or lower, or "Unknown"**
-
 ---
 
-## 5. Analysis Requirements
-
-- Identify input sources: `recv`, `read`, `getenv`, `argv`
-- Trace taint flow from input to sink
-- Locate dangerous sink functions
-- Confirm protection absence
-- Analyze call chain completeness
-- Validate variable state and buffer usage
-
----
-
-## 6. Evidence Requirements
+## 4. Evidence Requirements
 
 For all conclusions, include:
 - Taint propagation path
 - Function chain (who called what)
 - Variable flow tracking
 - Relevant instruction addresses
-- Dangerous function usage confirmation
+- Unsafe function usage confirmation
 
 ---
 
-## 7. Status Transition Rules
+## 5. Status Transition Rules
 
 - `"status": "continue"` when analysis is ongoing (e.g., unresolved function, input unknown)
 - `"status": "complete"` only when all:
@@ -761,37 +697,23 @@ For all conclusions, include:
 
 ---
 
-## 8. Misjudgment Prevention Guard
-
+## 6. Disallowed Behaviors
 - **Never** infer behavior or risk based on assumption
 - Use `"risk_level": "Unknown"` if evidence is missing
 - Do not elevate risk based on partial decompilation or guessed control flow
-
----
-
-## 9. Disallowed Behaviors
-
 - No speculative reasoning (e.g., "this might be obfuscated")
 - No multi-command lines (`;` not allowed)
-- Do not claim packing, encryption, or shellcode unless clearly proven from r2 output
 
 ---
 
-## 10. Binary Extraction and Integrity Awareness (for Binwalk / Firmware Cases)
+## 7. Binary Extraction and Integrity Awareness (for Binwalk / Firmware Cases)
 
-Binaries extracted from firmware images may have structural issues:
-
-| Symptom | Potential Cause |
-|--------|-----------------|
-| No xrefs to `entry0` | Truncated ELF or partial dump |
-| NULL/invalid memory references | Missing segments (`.init`, `.plt`) |
-| Missing call to `__libc_start_main()` | Packed binary or stripped loader |
-| Invalid disassembly or decompile failures | Misaligned offset / corrupted header |
-
-### In such cases:
+Binaries extracted from firmware images may have structural issues.
+In such cases:
 - Set `"risk_level": "Unknown"` if analysis is blocked
 - Add `"confidence": "High | Medium | Low"
-
+- **Never** speculate about binary structure issues without clear evidence
+- Focus analysis only on visible and confirmed code sections
 ---
 
 """
@@ -890,18 +812,26 @@ Binaries extracted from firmware images may have structural issues:
             matches = re.findall(json_pattern, response, re.DOTALL)
             
             if matches:
-                # 使用找到的最后一个JSON (通常是最完整的)
-                json_str = matches[-1].strip()
+                # 确保最后一个匹配项是字符串
+                json_str = matches[-1]
+                if isinstance(json_str, str):
+                    json_str = json_str.strip()
+                    result = json.loads(json_str)
+                    if not isinstance(result, dict):
+                        self.disassembly_logger.error("[Parser] Response is not a dictionary")
+                        raise ValueError("Response is not a dictionary")
+                    return result
+                else:
+                    raise ValueError("Matched JSON is not a string")
             else:
                 # 如果没找到代码块,尝试直接解析整个响应
                 json_str = response.strip()
-            
-            result = json.loads(json_str)
-            if not isinstance(result, dict):
-                self.disassembly_logger.error("[Parser] Response is not a dictionary")
-                raise ValueError("Response is not a dictionary")
-            return result
-                  
+                result = json.loads(json_str)
+                if not isinstance(result, dict):
+                    self.disassembly_logger.error("[Parser] Response is not a dictionary")
+                    raise ValueError("Response is not a dictionary")
+                return result
+
         except Exception as e:
             error_msg = f"Parsing error: {str(e)}\nOriginal response: {response}..."
             self.disassembly_logger.error(f"[Parser] {error_msg}")
@@ -947,7 +877,7 @@ Binaries extracted from firmware images may have structural issues:
     def _validate_command(self, cmd_str: str) -> bool:
         """Validate command format"""
         valid_commands = {
-            'pdd',   # Decompile function (50 lines per view)
+            'pdg',   # Decompile function (50 lines per view)
             'pdf',   # Print disassembly (50 lines per view)
             'afb',   # Analyze basic blocks (80 blocks per view)
             'afvd',  # Analyze variables and parameters (100 items per view)
@@ -1596,6 +1526,14 @@ def test_parallel_analysis(binary_path: str, save_path: str = "parallel_results"
         if 'test_logger' in locals():
             test_logger.error(f"[Test] Critical test failure: {str(e)}")
         return False
+
+if __name__ == "__main__":
+    # 示例用法
+    test_binary = "cgibin,0x405e18"
+    success = test_parallel_analysis(test_binary)
+    print(f"\n{'='*50}")
+    print(f"Parallel analysis test {'passed' if success else 'failed'}")
+    print(f"{'='*50}\n")
 
 
 
