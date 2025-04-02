@@ -807,33 +807,59 @@ In such cases:
         """解析 LLM 响应，使用正则表达式提取JSON"""
         self.disassembly_logger.info(f"[Parser] {response}")
         try:
-            # 使用正则表达式匹配JSON内容
-            json_pattern = r'```(?:json)?\s*(\{.*?\})\s*```'
-            matches = re.findall(json_pattern, response, re.DOTALL)
+            # 首先尝试查找代码块
+            code_block_pattern = r'```(?:json)?\s*([\s\S]*?)\s*```'
+            code_blocks = re.findall(code_block_pattern, response, re.DOTALL)
             
-            if matches:
-                # 确保最后一个匹配项是字符串
-                json_str = matches[-1]
-                if isinstance(json_str, str):
-                    json_str = json_str.strip()
-                    result = json.loads(json_str)
-                    if not isinstance(result, dict):
-                        self.disassembly_logger.error("[Parser] Response is not a dictionary")
-                        raise ValueError("Response is not a dictionary")
+            if code_blocks:
+                # 尝试解析每个代码块，直到找到有效的JSON
+                for block in code_blocks:
+                    try:
+                        block = block.strip()
+                        result = json.loads(block)
+                        if isinstance(result, dict):
+                            return result
+                    except json.JSONDecodeError:
+                        continue
+                
+                # 如果所有代码块都不是有效JSON，尝试提取可能的JSON部分
+                for block in code_blocks:
+                    try:
+                        # 尝试查找块中的JSON对象
+                        json_pattern = r'(\{(?:[^{}]|(?:\{[^{}]*\}))*\})'
+                        potential_jsons = re.findall(json_pattern, block, re.DOTALL)
+                        for potential_json in potential_jsons:
+                            try:
+                                result = json.loads(potential_json)
+                                if isinstance(result, dict):
+                                    return result
+                            except json.JSONDecodeError:
+                                continue
+                    except Exception:
+                        continue
+            
+            # 尝试直接解析整个响应
+            try:
+                result = json.loads(response.strip())
+                if isinstance(result, dict):
                     return result
-                else:
-                    raise ValueError("Matched JSON is not a string")
-            else:
-                # 如果没找到代码块,尝试直接解析整个响应
-                json_str = response.strip()
-                result = json.loads(json_str)
-                if not isinstance(result, dict):
-                    self.disassembly_logger.error("[Parser] Response is not a dictionary")
-                    raise ValueError("Response is not a dictionary")
-                return result
+            except json.JSONDecodeError:
+                # 最后尝试提取可能的JSON部分
+                json_pattern = r'(\{(?:[^{}]|(?:\{[^{}]*\}))*\})'
+                potential_jsons = re.findall(json_pattern, response, re.DOTALL)
+                for potential_json in potential_jsons:
+                    try:
+                        result = json.loads(potential_json)
+                        if isinstance(result, dict):
+                            return result
+                    except json.JSONDecodeError:
+                        continue
+                
+                self.disassembly_logger.error("[Parser] 无法从响应中提取有效的JSON")
+                raise ValueError("响应中不包含有效的JSON")
 
         except Exception as e:
-            error_msg = f"Parsing error: {str(e)}\nOriginal response: {response}..."
+            error_msg = f"Parsing error: {str(e)}\nOriginal response: {response[:200]}..."
             self.disassembly_logger.error(f"[Parser] {error_msg}")
             
             # 返回一个带有命令的错误响应,这样可以触发下一轮对话
@@ -846,7 +872,7 @@ In such cases:
                 "commands": "None",  # 使用None作为命令,这样会被验证通过
                 "status": "continue"
             }
-        
+            
     def execute_r2_command(self, cmd: str, timeout: int = 90) -> str:
         """Execute r2 command with timeout control and thread safety"""
         with self.r2_lock:  # Lock to ensure concurrency safety
